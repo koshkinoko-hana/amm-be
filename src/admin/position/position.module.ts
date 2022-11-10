@@ -1,0 +1,11 @@
+import {Module} from "@nestjs/common";
+import {LoggerModule} from "@logger";
+import {PositionController} from "./position.controller";
+import {PositionService} from "./position.service";
+
+@Module({
+    imports:[LoggerModule.forFeature([PositionController, PositionService])],
+    controllers: [PositionController],
+    providers: [PositionService]
+})
+export class PositionModule {}

@@ -1,5 +1,5 @@
-import { Module, DynamicModule, Type } from '@nestjs/common'
-import { LoggerFactory } from './logger.factory'
+import { DynamicModule, Module, Type } from '@nestjs/common';
+import { LoggerFactory } from './logger.factory';
 
 @Module({
   providers: [LoggerFactory],
@@ -10,16 +10,16 @@ export class LoggerModule {
     const providers = types.map((type) => ({
       provide: `${type.name}Logger`,
       useFactory: (loggerFactory: LoggerFactory) => {
-        const logger = loggerFactory.getLogger()
-        return logger.child(type.name)
+        const logger = loggerFactory.getLogger();
+        return logger.child(type.name);
       },
       inject: [LoggerFactory],
-    }))
+    }));
 
     return {
       module: LoggerModule,
       providers,
       exports: providers,
-    }
+    };
   }
 }

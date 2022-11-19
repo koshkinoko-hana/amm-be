@@ -1,22 +1,22 @@
-import { Entity, Property } from '@mikro-orm/core';
-import { Identified } from './identified.entity';
+import { Entity, Property } from '@mikro-orm/core'
+import { Identified } from './identified.entity'
 
 @Entity()
 export class Auditory extends Identified {
   @Property()
-  name: string;
+  name: string
 
   @Property()
-  type?: Auditory.Type;
+  type?: Auditory.Type
 
   @Property()
-  size?: number;
+  size?: number
 
   constructor(props: Omit<Auditory, keyof Identified>) {
-    super();
-    this.name = props.name;
-    this.type = props.type;
-    this.size = props.size;
+    super()
+    this.name = props.name
+    this.type = props.type
+    this.size = props.size
   }
 }
 

@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^9.0.0",
     "class-transformer": "^0.2.3",
     "class-validator": "^0.13.2",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
     "mikro-orm": "5.4.0",
     "pino": "^8.7.0",

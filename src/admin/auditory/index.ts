@@ -1,0 +1,1 @@
+export {AuditoryModule} from "./auditory.module"

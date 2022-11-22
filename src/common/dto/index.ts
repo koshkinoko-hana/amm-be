@@ -1,1 +1,1 @@
-export { PaginationQuery } from './pagination.query';
+export { PaginationQuery } from './pagination.query'

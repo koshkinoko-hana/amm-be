@@ -1,7 +1,9 @@
-import { MySqlDriver } from '@mikro-orm/mysql';
-import { MikroOrmModuleOptions } from '@mikro-orm/nestjs/typings';
-import * as entities from './src/common/entities';
-require('dotenv').config();
+import {MySqlDriver} from '@mikro-orm/mysql'
+import {MikroOrmModuleOptions} from '@mikro-orm/nestjs/typings'
+import * as entities from './src/common/entities'
+
+// tslint:disable-next-line:no-var-requires
+require('dotenv').config()
 
 export default {
   type: 'mysql',
@@ -24,4 +26,4 @@ export default {
   cache: {
     enabled: false,
   },
-} as MikroOrmModuleOptions<MySqlDriver>;
+} as MikroOrmModuleOptions<MySqlDriver>

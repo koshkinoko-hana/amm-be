@@ -1,4 +1,4 @@
-import { Logger } from '@logger';
+import { Logger } from '@logger'
 import {
   AnyEntity,
   Dictionary,
@@ -7,7 +7,7 @@ import {
   FilterQuery,
   IPrimaryKey,
   Utils,
-} from '@mikro-orm/core';
+} from '@mikro-orm/core'
 import {
   BadRequestException,
   ConflictException,
@@ -15,18 +15,15 @@ import {
   HttpException,
   NotFoundException,
   Type,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
-export type HandlerFn = (
-  entityName: string,
-  where: Dictionary | IPrimaryKey | any,
-) => Error;
+export type HandlerFn = (entityName: string, where: Dictionary | IPrimaryKey | any) => Error
 
 export interface FailHandlerOptions {
-  message: (entityName: string) => string;
-  logLevel: keyof Pick<Logger, 'trace' | 'debug' | 'info' | 'warn' | 'error'>;
-  exception: Type<HttpException>;
-  logMsg?: string;
+  message: (entityName: string) => string
+  logLevel: keyof Pick<Logger, 'trace' | 'debug' | 'info' | 'warn' | 'error'>
+  exception: Type<HttpException>
+  logMsg?: string
 }
 
 export async function failIfExists<T extends AnyEntity<T>>(
@@ -35,23 +32,18 @@ export async function failIfExists<T extends AnyEntity<T>>(
   where: FilterQuery<T>,
   _failHandler: HandlerFn,
 ): Promise<void> {
-  const conflict = await em
-    .count<T>(entityName, where)
-    .then((count) => count > 0);
+  const conflict = await em.count<T>(entityName, where).then((count) => count > 0)
   if (conflict) {
-    throw _failHandler(Utils.className(entityName), where);
+    throw _failHandler(Utils.className(entityName), where)
   }
 }
 
 export function failHandler(logger: Logger, options: FailHandlerOptions) {
   return (entityName: string, where: Dictionary | IPrimaryKey | any): Error => {
-    const err = new options.exception(options.message(entityName));
-    logger[options.logLevel](
-      { err, entityName, where },
-      `! ${options.logMsg || 'not found'}`,
-    );
-    return err;
-  };
+    const err = new options.exception(options.message(entityName))
+    logger[options.logLevel]({ err, entityName, where }, `! ${options.logMsg || 'not found'}`)
+    return err
+  }
 }
 
 export function badRequestHandler(
@@ -63,19 +55,16 @@ export function badRequestHandler(
     message: (entityName) => `Wrong parameters for ${entityName}!`,
     logLevel: 'info',
     ...options,
-  });
+  })
 }
 
-export function notFoundHandler(
-  logger: Logger,
-  options?: Partial<FailHandlerOptions>,
-): HandlerFn {
+export function notFoundHandler(logger: Logger, options?: Partial<FailHandlerOptions>): HandlerFn {
   return failHandler(logger, {
     exception: NotFoundException,
     message: (entityName) => `${entityName} not found!`,
     logLevel: 'info',
     ...options,
-  });
+  })
 }
 
 export function accessDeniedHandler(
@@ -87,18 +76,15 @@ export function accessDeniedHandler(
     message: (entityName) => `${entityName} access denied!`,
     logLevel: 'warn',
     ...options,
-  });
+  })
 }
 
-export function conflictHandler(
-  logger: Logger,
-  options?: Partial<FailHandlerOptions>,
-): HandlerFn {
+export function conflictHandler(logger: Logger, options?: Partial<FailHandlerOptions>): HandlerFn {
   return failHandler(logger, {
     exception: ConflictException,
     message: (entityName) => `${entityName} already exists!`,
     logLevel: 'info',
     logMsg: 'already exists',
     ...options,
-  });
+  })
 }

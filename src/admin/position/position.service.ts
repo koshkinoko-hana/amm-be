@@ -1,19 +1,15 @@
-import { PaginationQuery } from '@common/dto';
-import { PageInfo } from '@common/dto/page-info';
-import {
-  conflictHandler,
-  failIfExists,
-  notFoundHandler,
-} from '@common/utils/fail-handler';
-import { Position } from '@entities';
-import { InjectLogger, Logger } from '@logger';
-import { EntityManager } from '@mikro-orm/core';
-import { Injectable } from '@nestjs/common';
-import { CreateRequest } from './dto/create.request';
-import { FindAllRequest } from './dto/find-all.request';
-import { FindAllResponse } from './dto/find-all.response';
-import { FindResponse } from './dto/find.response';
-import { UpdateRequest } from './dto/update.request';
+import { PaginationQuery } from '@common/dto'
+import { PageInfo } from '@common/dto/page-info'
+import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
+import { Position } from '@entities'
+import { InjectLogger, Logger } from '@logger'
+import { EntityManager } from '@mikro-orm/core'
+import { Injectable } from '@nestjs/common'
+import { CreateRequest } from './dto/create.request'
+import { FindAllRequest } from './dto/find-all.request'
+import { FindAllResponse } from './dto/find-all.response'
+import { FindResponse } from './dto/find.response'
+import { UpdateRequest } from './dto/update.request'
 
 @Injectable()
 export class PositionService {
@@ -22,7 +18,7 @@ export class PositionService {
     private readonly logger: Logger,
     private readonly em: EntityManager,
   ) {
-    this.logger.child('constructor').trace('<>');
+    this.logger.child('constructor').trace('<>')
   }
 
   public async findAll(
@@ -30,8 +26,8 @@ export class PositionService {
     sorting: FindAllRequest.SortingQuery,
     filters: FindAllRequest.FiltersQuery,
   ): Promise<[FindAllResponse.Position[], PageInfo]> {
-    const logger = this.logger.child('findAll');
-    logger.trace('>');
+    const logger = this.logger.child('findAll')
+    logger.trace('>')
     const [positions, total] = await this.em.findAndCount(
       Position,
       {
@@ -40,19 +36,19 @@ export class PositionService {
       {
         ...pagination,
       },
-    );
-    logger.trace({ positions, total });
+    )
+    logger.trace({ positions, total })
     const res: [FindAllResponse.Position[], PageInfo] = [
       positions.map((pos: Position) => new FindAllResponse.Position(pos)),
       { total, ...pagination },
-    ];
-    logger.trace({ res });
-    return res;
+    ]
+    logger.trace({ res })
+    return res
   }
 
   public async find(id: number) {
-    const logger = this.logger.child('findAll');
-    logger.trace('>');
+    const logger = this.logger.child('findAll')
+    logger.trace('>')
     const position = await this.em.findOneOrFail(
       Position,
       {
@@ -61,18 +57,18 @@ export class PositionService {
       {
         failHandler: notFoundHandler(logger),
       },
-    );
+    )
 
-    logger.traceObject({ position });
+    logger.traceObject({ position })
 
-    const res = new FindResponse.Position(position);
-    logger.trace({ res }, '<');
-    return res;
+    const res = new FindResponse.Position(position)
+    logger.trace({ res }, '<')
+    return res
   }
 
   public async update(id: number, req: UpdateRequest.Position) {
-    const logger = this.logger.child('update');
-    logger.trace('>');
+    const logger = this.logger.child('update')
+    logger.trace('>')
     const position = await this.em.findOneOrFail(
       Position,
       {
@@ -81,18 +77,18 @@ export class PositionService {
       {
         failHandler: notFoundHandler(logger),
       },
-    );
-    position.name = req.name;
-    await this.em.persistAndFlush(position);
+    )
+    position.name = req.name
+    await this.em.persistAndFlush(position)
 
-    logger.traceObject({ position });
+    logger.traceObject({ position })
 
-    return position.id;
+    return position.id
   }
 
   public async create(req: CreateRequest.Position) {
-    const logger = this.logger.child('update');
-    logger.trace('>');
+    const logger = this.logger.child('update')
+    logger.trace('>')
     await failIfExists(
       this.em,
       Position,
@@ -100,12 +96,12 @@ export class PositionService {
       conflictHandler(logger, {
         message: () => `Brand name ${req.name} is already in use.`,
       }),
-    );
-    const position = new Position(req);
-    await this.em.persistAndFlush(position);
+    )
+    const position = new Position(req)
+    await this.em.persistAndFlush(position)
 
-    logger.traceObject({ position });
+    logger.traceObject({ position })
 
-    return position.id;
+    return position.id
   }
 }

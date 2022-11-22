@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import {LoggerFactory, LoggerModule} from "@logger";
-import {MikroOrmModule} from "@mikro-orm/nestjs";
-import mikroOrmConfig from "../mikro-orm.config";
-import {AdminModule} from "./admin/admin.module";
+import { LoggerFactory, LoggerModule } from '@logger'
+import { MikroOrmModule } from '@mikro-orm/nestjs'
+import { Module } from '@nestjs/common'
+import mikroOrmConfig from '../mikro-orm.config'
+import { AdminModule } from './admin/admin.module'
 
 @Module({
   imports: [
@@ -16,8 +16,9 @@ import {AdminModule} from "./admin/admin.module";
         }
       },
       inject: [LoggerFactory],
-      imports: [LoggerModule, AdminModule],
+      imports: [LoggerModule],
     }),
+    AdminModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,6 @@
-import { Inject, Injectable, Type, LoggerService as INestLogger } from '@nestjs/common'
+import { Inject, Injectable, LoggerService as INestLogger, Type } from '@nestjs/common'
+import { undefinedToNull } from '@utils'
 import pino from 'pino'
-import {undefinedToNull} from '@utils'
 
 @Injectable()
 export class LoggerFactory {
@@ -10,7 +10,7 @@ export class LoggerFactory {
     this.rootLogger = pino({
       colorize: true,
       translateTime: true,
-      level: 'info'
+      level: 'info',
     })
   }
 

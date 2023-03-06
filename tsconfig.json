@@ -19,8 +19,7 @@
     "esModuleInterop": true,
     "paths": {
       "@entities":  ["src/common/entities"],
-      "@admin": ["src/admin"],
-      "@common": ["src/common"],
+      "@admin/*": ["src/admin/*"],
       "@common/*": ["src/common/*"],
       "@utils": ["src/common/utils"],
       "@logger": ["src/common/logger"],

@@ -1,30 +1,50 @@
-import { Collection, Entity, ManyToMany, Property } from '@mikro-orm/core'
+import { Entity, ManyToOne, Property } from '@mikro-orm/core'
 import { Auditable } from './auditable.entity'
-import { Position } from './position.entity'
+import { Company } from './company.entity'
 
 @Entity()
 export class User extends Auditable {
   @Property()
-  firstName: string
+  login: string
 
   @Property()
-  middleName?: string
-
-  @Property()
-  lastName: string
+  passwordHash: string
 
   @Property({ nullable: true })
-  photo: string
+  fullName?: string
 
-  @ManyToMany(() => Position, (position) => position.users, { owner: true })
-  positions: Collection<Position> = new Collection<Position>(this)
+  @Property({ type: 'array' })
+  roles: User.Role[]
+
+  @Property()
+  status: User.Status
+
+  @ManyToOne({ nullable: true })
+  company?: Company
 
   constructor(props: Omit<User, keyof Auditable>) {
     super()
-    this.firstName = props.firstName
-    this.middleName = props.middleName
-    this.lastName = props.lastName
-    this.photo = props.photo
-    this.positions = props.positions
+    this.login = props.login
+    this.passwordHash = props.passwordHash
+    this.roles = props.roles
+    this.status = props.status
+  }
+}
+
+export namespace User {
+  export enum Role {
+    ADMIN = 'admin',
+    NEWS_MODERATOR = 'news_moderator',
+    SCHEDULE_MODERATOR = 'schedule_moderator',
+    CONTENT_MODERATOR = 'content_moderator',
+    COMPANY_MODERATOR = 'company_moderator',
+    STRUCTURE_DATA_MODERATOR = 'structure_data_moderator',
+    AUTHENTICATED = 'authenticated',
+  }
+
+  export enum Status {
+    PENDING = 'pending',
+    ACTIVE = 'active',
+    DEACTIVATED = 'deactivated',
   }
 }

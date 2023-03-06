@@ -87,14 +87,14 @@ export class PositionService {
   }
 
   public async create(req: CreateRequest.Position) {
-    const logger = this.logger.child('update')
+    const logger = this.logger.child('create')
     logger.trace('>')
     await failIfExists(
       this.em,
       Position,
       { name: req.name },
       conflictHandler(logger, {
-        message: () => `Brand name ${req.name} is already in use.`,
+        message: () => `Position name ${req.name} is already in use.`,
       }),
     )
     const position = new Position(req)

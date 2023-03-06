@@ -1,7 +1,10 @@
+import { DepartmentModule } from '@admin/department'
 import { Module } from '@nestjs/common'
-import { PositionModule } from './position/position.module'
+import { PositionModule } from './position'
+import { AuthModule } from './auth'
+import { UserModule } from './user'
 
 @Module({
-  imports: [PositionModule],
+  imports: [AuthModule, DepartmentModule, PositionModule, UserModule],
 })
 export class AdminModule {}

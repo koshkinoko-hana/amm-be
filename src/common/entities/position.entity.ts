@@ -1,14 +1,14 @@
 import { Collection, Entity, ManyToMany, Property } from '@mikro-orm/core'
 import { Identified } from './identified.entity'
-import { User } from './user.entity'
+import { Employee } from './employee.entity'
 
 @Entity()
 export class Position extends Identified {
   @Property()
   name: string
 
-  @ManyToMany(() => User, (user) => user.positions)
-  users: Collection<User> = new Collection<User>(this)
+  @ManyToMany(() => Employee, (e) => e.positions)
+  users: Collection<Employee> = new Collection<Employee>(this)
 
   constructor(props: Omit<Position, keyof Identified | 'users'>) {
     super()

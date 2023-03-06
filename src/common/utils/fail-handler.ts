@@ -14,7 +14,7 @@ import {
   ForbiddenException,
   HttpException,
   NotFoundException,
-  Type,
+  Type, UnauthorizedException,
 } from '@nestjs/common'
 
 export type HandlerFn = (entityName: string, where: Dictionary | IPrimaryKey | any) => Error
@@ -53,6 +53,18 @@ export function badRequestHandler(
   return failHandler(logger, {
     exception: BadRequestException,
     message: (entityName) => `Wrong parameters for ${entityName}!`,
+    logLevel: 'info',
+    ...options,
+  })
+}
+
+export function unauthorizedHandler(
+  logger: Logger,
+  options?: Partial<FailHandlerOptions>,
+): HandlerFn {
+  return failHandler(logger, {
+    exception: UnauthorizedException,
+    message: () => `Not authenticated!`,
     logLevel: 'info',
     ...options,
   })

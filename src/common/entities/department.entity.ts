@@ -6,7 +6,7 @@ export class Department extends Auditable {
   @Property()
   name: string
 
-  @Property()
+  @Property({nullable: true, type: 'text'})
   description?: string
 
   @Property({ type: 'json' })

@@ -1,4 +1,5 @@
 import { DepartmentResponse } from '@admin/department/dto/department.response'
+import { Option } from '@common/dto/option'
 import { InjectLogger, Logger } from '@logger'
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
 import { CreateRequest } from './dto/create.request'
@@ -24,6 +25,15 @@ export class DepartmentController {
     logger.trace('>')
     const res = await this.departmentService.findAll()
 
+    logger.trace({ res }, '<')
+    return res
+  }
+
+  @Get('/options')
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+    const res = await this.departmentService.findOptions()
     logger.trace({ res }, '<')
     return res
   }

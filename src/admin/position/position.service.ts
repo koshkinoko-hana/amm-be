@@ -1,4 +1,5 @@
 import { PaginationQuery } from '@common/dto'
+import { Option } from '@common/dto/option'
 import { PageInfo } from '@common/dto/page-info'
 import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
 import { Position } from '@entities'
@@ -46,8 +47,18 @@ export class PositionService {
     return res
   }
 
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+    const positions = await this.em.find(Position, {})
+    logger.trace({ positions })
+    const res: Option[] = positions.map((item) => ({ label: item.name, value: item.id }))
+    logger.trace({ res })
+    return res
+  }
+
   public async find(id: number) {
-    const logger = this.logger.child('findAll')
+    const logger = this.logger.child('find')
     logger.trace('>')
     const position = await this.em.findOneOrFail(
       Position,

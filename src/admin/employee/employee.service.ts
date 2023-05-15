@@ -1,6 +1,6 @@
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { notFoundHandler } from '@common/utils/fail-handler'
-import { Employee } from '@entities'
+import { Employee, Photo } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
@@ -22,14 +22,14 @@ export class EmployeeService {
   public async findAll(): Promise<FindAllResponse.Employee[]> {
     const logger = this.logger.child('findAll')
     logger.trace('>')
-    const departments = await this.em.find(Employee, {})
-    logger.trace({ departments })
-    const res: FindAllResponse.Employee[] = departments.map(
+    const employees = await this.em.find(Employee, {})
+    logger.trace({ employees })
+    const res: FindAllResponse.Employee[] = employees.map(
       (e: Employee) =>
         new FindAllResponse.Employee({
           ...e,
-          name: `${e.firstName} ${e.middleName} ${e.lastName}`,
           positions: e.positions.toArray(),
+          departments: e.departments.toArray(),
         }),
     )
 
@@ -54,7 +54,14 @@ export class EmployeeService {
 
     const res = new FindResponse.Employee({
       ...employee,
-      positions: employee.positions.toArray(),
+      positions: employee.positions.toArray().map((position) => ({
+        value: position.id,
+        label: position.name,
+      })),
+      departments: employee.departments
+        .toArray()
+        .map((department) => ({ value: department.id, label: department.name })),
+      photo: employee.photo?.path,
     })
     logger.trace({ res }, '<')
     return res
@@ -70,15 +77,26 @@ export class EmployeeService {
       },
       {
         failHandler: notFoundHandler(logger),
+        populate: ['photo'],
       },
     )
+
     employee.firstName = req.firstName
     employee.middleName = req.middleName
     employee.lastName = req.lastName
     employee.description = req.description
     employee.firstName = req.firstName
     employee.description = req.description
-    employee.photo = req.photo
+
+    if (employee.photo?.id !== req.photoId) {
+      employee.photo = await this.em.findOneOrFail(
+        Photo,
+        { id: req.photoId },
+        {
+          failHandler: notFoundHandler(logger),
+        },
+      )
+    }
     await this.em.persistAndFlush(employee)
 
     logger.traceObject({ employee })
@@ -86,18 +104,21 @@ export class EmployeeService {
     return new EmployeeResponse({
       ...employee,
       positions: employee.positions.toArray(),
+      photoId: employee.photo?.id,
+      photoPath: employee.photo?.path,
     })
   }
 
   public async create(req: CreateRequest.Employee) {
     const logger = this.logger.child('create')
     logger.trace('>')
-    // const emplyee = new Employee(req)
-    // await this.em.persistAndFlush(department)
 
-    // logger.traceObject({ department })
+    const employee = new Employee(req)
+    await this.em.persistAndFlush(employee)
 
-    // return department
+    logger.traceObject({ employee })
+
+    return employee
   }
 
   public async delete(id: number) {

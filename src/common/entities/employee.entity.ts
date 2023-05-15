@@ -1,6 +1,8 @@
-import { Collection, Entity, ManyToMany, Property } from '@mikro-orm/core'
+import { Photo } from '@common/entities/photo.entity'
+import { Collection, Entity, ManyToMany, OneToOne, Property } from '@mikro-orm/core'
 import { Auditable } from './auditable.entity'
 import { Position } from './position.entity'
+import { Department } from './department.entity'
 
 @Entity()
 export class Employee extends Auditable {
@@ -13,8 +15,8 @@ export class Employee extends Auditable {
   @Property()
   lastName: string
 
-  @Property({ nullable: true })
-  photo?: string
+  @OneToOne({ nullable: true })
+  photo?: Photo
 
   @Property({ nullable: true })
   description?: string
@@ -22,10 +24,13 @@ export class Employee extends Auditable {
   @Property({ nullable: true })
   worksSince?: number
 
-  @ManyToMany(() => Position, (position) => position.users, { owner: true })
+  @ManyToMany(() => Position, (position) => position.employees, { owner: true })
   positions: Collection<Position> = new Collection<Position>(this)
 
-  constructor(props: Omit<Employee, keyof Auditable>) {
+  @ManyToMany(() => Department, (d) => d.employees)
+  departments: Collection<Department> = new Collection<Department>(this)
+
+  constructor(props: Omit<Employee, keyof Auditable | 'positions' | 'departments'>) {
     super()
     this.firstName = props.firstName
     this.middleName = props.middleName
@@ -33,6 +38,5 @@ export class Employee extends Auditable {
     this.photo = props.photo
     this.description = props.description
     this.worksSince = props.worksSince
-    this.positions = props.positions
   }
 }

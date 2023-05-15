@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export namespace CreateRequest {
   export class Employee {
@@ -14,9 +14,16 @@ export namespace CreateRequest {
 
     @IsOptional()
     @IsString()
-    photo?: string
+    photoPath?: string
+
+    @IsOptional()
+    @IsNumber()
+    photoId?: number
 
     @IsArray()
     positions!: number[]
+
+    @IsArray()
+    departments!: number[]
   }
 }

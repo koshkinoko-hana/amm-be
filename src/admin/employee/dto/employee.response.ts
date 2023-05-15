@@ -1,15 +1,19 @@
 export class EmployeeResponse {
+  id: number
   firstName: string
   middleName?: string
   lastName: string
-  photo?: string
+  photoId?: number
+  photoPath?: string
   positions: Position[]
 
   constructor(props: EmployeeResponse) {
+    this.id = props.id
     this.firstName = props.firstName
     this.middleName = props.middleName
     this.lastName = props.lastName
-    this.photo = props.photo
+    this.photoId = props.photoId
+    this.photoPath = props.photoPath
     this.positions = props.positions
   }
 }

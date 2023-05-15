@@ -8,9 +8,9 @@ export class Position extends Identified {
   name: string
 
   @ManyToMany(() => Employee, (e) => e.positions)
-  users: Collection<Employee> = new Collection<Employee>(this)
+  employees: Collection<Employee> = new Collection<Employee>(this)
 
-  constructor(props: Omit<Position, keyof Identified | 'users'>) {
+  constructor(props: Omit<Position, keyof Identified | 'users' | 'employees'>) {
     super()
     this.name = props.name
   }

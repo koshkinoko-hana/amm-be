@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export namespace UpdateRequest {
   export class Employee {
@@ -17,8 +17,8 @@ export namespace UpdateRequest {
     description?: string
 
     @IsOptional()
-    @IsString()
-    photo?: string
+    @IsNumber()
+    photoId?: number
 
     @IsArray()
     positions!: number[]

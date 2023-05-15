@@ -1,8 +1,9 @@
+import { FileHelperModule } from '@common/file-helper/file-helper.module'
 import { LoggerFactory, LoggerModule } from '@logger'
 import { MikroOrmModule } from '@mikro-orm/nestjs'
 import { Module } from '@nestjs/common'
 import mikroOrmConfig from '../mikro-orm.config'
-import { AdminModule } from './admin/admin.module'
+import { AdminModule } from '@admin/admin.module'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminModule } from './admin/admin.module'
       imports: [LoggerModule],
     }),
     AdminModule,
+    FileHelperModule,
   ],
 })
 export class AppModule {}

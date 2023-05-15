@@ -1,3 +1,4 @@
+import { Option } from '@common/dto/option'
 import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
 import { Department } from '@entities'
 import { InjectLogger, Logger } from '@logger'
@@ -31,8 +32,18 @@ export class DepartmentService {
     return res
   }
 
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+    const departments = await this.em.find(Department, {})
+    logger.trace({ departments })
+    const res: Option[] = departments.map((item) => ({ label: item.name, value: item.id }))
+    logger.trace({ res })
+    return res
+  }
+
   public async find(id: number) {
-    const logger = this.logger.child('findAll')
+    const logger = this.logger.child('find')
     logger.trace('>')
     const department = await this.em.findOneOrFail(
       Department,

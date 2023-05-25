@@ -80,10 +80,6 @@ export class EmployeeService {
         populate: ['photo', 'positions', 'departments'],
       },
     )
-    console.log(
-      '🚀 ~ file: employee.service.ts:85 ~ EmployeeService ~ update ~ employee:',
-      employee,
-    )
 
     employee.firstName = req.firstName
     employee.middleName = req.middleName
@@ -152,14 +148,6 @@ export class EmployeeService {
 
         if (department) {
           employee.departments.remove(department)
-          console.log(
-            '~~~🚀 ~ file: employee.service.ts:155 ~ EmployeeService ~ update ~ department:',
-            department,
-          )
-          console.log(
-            '~~~~🚀 ~ file: employee.service.ts:155 ~ EmployeeService ~ update ~ employee:',
-            employee,
-          )
         }
       }
     }

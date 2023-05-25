@@ -6,6 +6,7 @@ import * as entities from './src/common/entities'
 require('dotenv').config()
 
 export default {
+  entitiesTs: ['./src/entities'],
   type: 'mysql',
   host: 'localhost',
   port: 3306,
@@ -16,12 +17,15 @@ export default {
   glob: '!(*.d).{js,ts}',
   entities: Object.values(entities),
   migrations: {
-    tableName: 'migrations', // name of database table with log of executed transactions
-    path: './migrations', // path to the folder with migrations
-    transactional: true, // wrap each migration in a transaction
-    disableForeignKeys: true, // wrap statements with `set foreign_key_checks = 0` or equivalent
-    allOrNothing: true, // wrap all migrations in master transaction
-  },
+    path: './migrations', // путь до папки с миграциями
+    pattern: /^[\w-]+\d+\.[tj]s$/, // регулярное выражение для поиска файлов миграций
+    transactional: true, // обернуть каждую миграцию в транзакцию
+    disableForeignKeys: true, // автоматически отключить foreign keys во время миграции
+    allOrNothing: true, // обернуть все миграции в master транзакцию
+    dropTables: true, // автоматически отключить foreign keys во время миграции
+    safe: false, // позволить выполнять миграции "вне очереди"
+    emit: 'ts', // использовать TypeScript для генерации миграций
+},
   tsNode: false,
   cache: {
     enabled: false,

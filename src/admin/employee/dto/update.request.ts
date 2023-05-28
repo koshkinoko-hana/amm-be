@@ -1,3 +1,4 @@
+import { Option } from '@common/dto/option'
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export namespace UpdateRequest {
@@ -21,6 +22,9 @@ export namespace UpdateRequest {
     photoId?: number
 
     @IsArray()
-    positions!: number[]
+    positions!: Option[]
+
+    @IsArray()
+    departments!: Option[]
   }
 }

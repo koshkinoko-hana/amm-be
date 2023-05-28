@@ -14,7 +14,7 @@ export class Department extends Auditable {
   competencies: string[]
 
   @ManyToMany(() => Employee, (d) => d.departments, { owner: true })
-  employees: Collection<Department> = new Collection<Department>(this)
+  employees: Collection<Employee> = new Collection<Employee>(this)
 
   constructor(props: Omit<Department, keyof Auditable | 'employees'>) {
     super()

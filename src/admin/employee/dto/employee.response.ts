@@ -7,6 +7,7 @@ export class EmployeeResponse {
   departments: Department[]
   photoId?: number
   photoPath?: string
+  positions: Position[]
 
   constructor(props: EmployeeResponse) {
     this.id = props.id
@@ -26,6 +27,15 @@ export class Position {
   name: string
 
   constructor(props: Position) {
+    this.id = props.id
+    this.name = props.name
+  }
+}
+export class Department {
+  id: number
+  name: string
+
+  constructor(props: Department) {
     this.id = props.id
     this.name = props.name
   }

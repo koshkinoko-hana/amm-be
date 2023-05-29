@@ -1,6 +1,6 @@
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { notFoundHandler } from '@common/utils/fail-handler'
-import { Department, Employee, Position } from '@entities'
+import { Employee, Photo } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
@@ -22,7 +22,7 @@ export class EmployeeService {
   public async findAll(): Promise<FindAllResponse.Employee[]> {
     const logger = this.logger.child('findAll')
     logger.trace('>')
-    const employees = await this.em.find(Employee, {})
+    const employees = await this.em.find(Employee, {}, { populate: ['positions', 'departments'] })
     logger.trace({ employees })
     const res: FindAllResponse.Employee[] = employees.map(
       (e: Employee) =>
@@ -46,6 +46,7 @@ export class EmployeeService {
         id,
       },
       {
+        populate: ['positions', 'departments'],
         failHandler: notFoundHandler(logger),
       },
     )
@@ -85,16 +86,40 @@ export class EmployeeService {
     employee.middleName = req.middleName
     employee.lastName = req.lastName
     employee.description = req.description
+    employee.firstName = req.firstName
+    employee.description = req.description
 
-    // if (employee.photo?.id !== req.photoId) {
-    //   employee.photo = await this.em.findOneOrFail(
-    //     Photo,
-    //     { id: req.photoId },
-    //     {
-    //       failHandler: notFoundHandler(logger),
-    //     },
-    //   )
-    // }
+    const currentDepartments = new Set(
+      employee.departments.getItems().map((department) => department.id),
+    )
+    const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId.value))
+
+    for (const departmentId of updatedDepartments) {
+      if (!currentDepartments.has(departmentId)) {
+        const department = allDepartments.find((department) => department.id === departmentId)
+
+        if (!department) {
+          throw new Error(`Position with ID ${departmentId} not found`)
+        }
+
+        employee.departments.add(department)
+      }
+    }
+    for (const departmentId of currentDepartments) {
+      if (!updatedDepartments.has(departmentId)) {
+        const department = employee.departments
+          .getItems()
+          .find((department) => department.id === departmentId)
+
+        if (department) {
+          employee.departments.remove(department)
+        }
+      }
+    }
+    employee.firstName = req.firstName
+    employee.middleName = req.middleName
+    employee.lastName = req.lastName
+    employee.description = req.description
 
     const allPositions = await this.em.find(Position, {})
     const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
@@ -167,25 +192,6 @@ export class EmployeeService {
     const logger = this.logger.child('create')
     logger.trace('>')
     const employee = new Employee(req)
-
-    for (const positionId of req.positions) {
-      const position = await this.em.findOne(Position, positionId)
-
-      if (!position) {
-        throw new Error(`Position with ID ${positionId} not found`)
-      }
-      employee.positions.add(position)
-    }
-
-    for (const departmentId of req.departments) {
-      const department = await this.em.findOne(Department, departmentId)
-
-      if (!department) {
-        throw new Error(`Department with ID ${departmentId} not found`)
-      }
-      employee.departments.add(department)
-    }
-
     await this.em.persistAndFlush(employee)
     logger.traceObject({ employee })
     return employee

@@ -4,6 +4,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs'
 import { Module } from '@nestjs/common'
 import mikroOrmConfig from '../mikro-orm.config'
 import { AdminModule } from '@admin/admin.module'
+import { ClientModule } from './client/client.module'
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AdminModule } from '@admin/admin.module'
       imports: [LoggerModule],
     }),
     AdminModule,
+    ClientModule,
     FileHelperModule,
   ],
 })

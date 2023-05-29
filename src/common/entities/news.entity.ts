@@ -1,4 +1,4 @@
-import { Photo } from '@common/entities/photo.entity'
+import { Photo } from './photo.entity'
 import { Entity, OneToOne, PrimaryKey, Property } from '@mikro-orm/core'
 
 @Entity()
@@ -24,7 +24,7 @@ export class News {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date()
 
-  constructor(props: News) {
+  constructor(props: Omit<News, 'createdAt' | 'updatedAt'>) {
     this.slug = props.slug
     this.name = props.name
     this.description = props.description

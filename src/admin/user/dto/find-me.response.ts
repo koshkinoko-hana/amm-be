@@ -1,4 +1,4 @@
-import {User as UserEntity} from '@entities'
+import { User as UserEntity } from '@entities'
 
 export namespace FindMeResponse {
   export class User {

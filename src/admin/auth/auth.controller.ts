@@ -2,7 +2,7 @@ import { InjectLogger, Logger } from '@logger'
 import { Body, Controller, Post } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { AuthorizarionRequest, AuthorizationResponse } from './dto'
-import {RegisterRequest} from './dto/register.request'
+import { RegisterRequest } from './dto/register.request'
 
 @Controller('/admin/auth')
 export class AuthController {
@@ -27,9 +27,7 @@ export class AuthController {
   }
 
   @Post('/register')
-  async register(
-    @Body() req: RegisterRequest.Credentials,
-  ): Promise<boolean> {
+  async register(@Body() req: RegisterRequest.Credentials): Promise<boolean> {
     const logger = this.logger.child('register', { req })
     logger.trace('>')
 

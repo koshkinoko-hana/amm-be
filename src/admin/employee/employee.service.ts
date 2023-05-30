@@ -1,6 +1,6 @@
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { notFoundHandler } from '@common/utils/fail-handler'
-import { Employee, Photo } from '@entities'
+import { Department, Employee, Position } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
@@ -82,40 +82,6 @@ export class EmployeeService {
       },
     )
 
-    employee.firstName = req.firstName
-    employee.middleName = req.middleName
-    employee.lastName = req.lastName
-    employee.description = req.description
-    employee.firstName = req.firstName
-    employee.description = req.description
-
-    const currentDepartments = new Set(
-      employee.departments.getItems().map((department) => department.id),
-    )
-    const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId.value))
-
-    for (const departmentId of updatedDepartments) {
-      if (!currentDepartments.has(departmentId)) {
-        const department = allDepartments.find((department) => department.id === departmentId)
-
-        if (!department) {
-          throw new Error(`Position with ID ${departmentId} not found`)
-        }
-
-        employee.departments.add(department)
-      }
-    }
-    for (const departmentId of currentDepartments) {
-      if (!updatedDepartments.has(departmentId)) {
-        const department = employee.departments
-          .getItems()
-          .find((department) => department.id === departmentId)
-
-        if (department) {
-          employee.departments.remove(department)
-        }
-      }
-    }
     employee.firstName = req.firstName
     employee.middleName = req.middleName
     employee.lastName = req.lastName

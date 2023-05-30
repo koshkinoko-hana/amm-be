@@ -18,7 +18,7 @@
     "lint": "tslint -p tsconfig.json -c tslint.json"
   },
   "dependencies": {
-    "@mikro-orm/cli": "5.4.0",
+    "@mikro-orm/cli": "^5.7.10",
     "@mikro-orm/core": "^5.4.0",
     "@mikro-orm/migrations": "^5.4.0",
     "@mikro-orm/mysql": "^5.4.0",

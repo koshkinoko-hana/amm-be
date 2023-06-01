@@ -5,6 +5,7 @@ import { PositionModule } from './position'
 import { AuthModule } from './auth'
 import { UserModule } from './user'
 import { GalleryPhotoModule } from './galleryPhoto'
+import { DirectionModule } from './direction'
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { GalleryPhotoModule } from './galleryPhoto'
     PositionModule,
     UserModule,
     GalleryPhotoModule,
+    DirectionModule,
   ],
 })
 export class AdminModule {}

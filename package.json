@@ -13,16 +13,12 @@
     "start:dev": "nest start --watch --tsc",
     "start:debug": "nest start --debug --watch --tsc",
     "start:prod": "node dist/main",
-    "migration:create": "cross-env NODE_OPTIONS=\"--experimental-loader=ts-node/esm\" mikro-orm migration:create",
-    "migration:up": "cross-env NODE_OPTIONS=\"--experimental-loader=ts-node/esm\" mikro-orm migration:up",
-    "start:ts": "ts-node-dev src/main.ts",
-    "migration:create:ts": "cross-env ts-node mikro-orm migration:create",
-    "migration:up:ts": "cross-env ts-node mikro-orm migration:up",
-    "migration:down:ts": "cross-env ts-node mikro-orm migration:down",
-      "lint": "tslint -p tsconfig.json -c tslint.json"
+    "migration:create": "NODE_OPTIONS=\"--experimental-loader=ts-node/esm\" mikro-orm migration:create",
+    "migration:up": "NODE_OPTIONS=\"--experimental-loader=ts-node/esm\" mikro-orm migration:up",
+    "lint": "tslint -p tsconfig.json -c tslint.json"
   },
   "dependencies": {
-    "@mikro-orm/cli": "5.4.0",
+    "@mikro-orm/cli": "^5.7.10",
     "@mikro-orm/core": "^5.4.0",
     "@mikro-orm/migrations": "^5.4.0",
     "@mikro-orm/mysql": "^5.4.0",

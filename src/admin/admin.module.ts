@@ -4,8 +4,9 @@ import { Module } from '@nestjs/common'
 import { PositionModule } from './position'
 import { AuthModule } from './auth'
 import { UserModule } from './user'
+import { FaqModule } from './faq'
 
 @Module({
-  imports: [AuthModule, DepartmentModule, EmployeeModule, PositionModule, UserModule],
+  imports: [AuthModule, DepartmentModule, EmployeeModule, PositionModule, UserModule, FaqModule],
 })
 export class AdminModule {}

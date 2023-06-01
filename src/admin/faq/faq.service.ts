@@ -37,6 +37,7 @@ export class FaqService {
     faq.email = req.email
     faq.question = req.question
     faq.answer = req.answer
+    faq.respondent = req.respondent
 
     await this.em.persistAndFlush(faq)
 

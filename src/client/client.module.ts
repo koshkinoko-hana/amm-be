@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
-import { NewsModule } from './news'
-import { DepartmentModule } from './department'
-import { EmployeeModule } from './employee'
-import { PositionModule } from './position'
+import { ClientDepartmentModule } from './department'
+import { ClientEmployeeModule } from './employee'
+import { ClientPositionModule } from './position'
+import { ClientFaqModule } from './faq'
 
 @Module({
-  imports: [DepartmentModule, EmployeeModule, PositionModule, NewsModule],
+  imports: [ClientDepartmentModule, ClientEmployeeModule, ClientPositionModule, ClientFaqModule],
 })
 export class ClientModule {}

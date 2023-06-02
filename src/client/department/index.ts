@@ -1,1 +1,1 @@
-export { DepartmentModule } from './department.module'
+export { ClientDepartmentModule } from './department.module'

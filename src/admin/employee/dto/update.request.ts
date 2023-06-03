@@ -21,6 +21,10 @@ export namespace UpdateRequest {
     @IsNumber()
     photoId?: number
 
+    @IsOptional()
+    @IsNumber()
+    photoPath?: string
+
     @IsArray()
     positions!: Option[]
 

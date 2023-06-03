@@ -5,7 +5,7 @@ export namespace FindResponse {
     firstName: string
     middleName?: string
     lastName: string
-    photo?: string
+    photoPath?: string
     description?: string
     positions: Option[]
     departments: Option[]
@@ -14,7 +14,7 @@ export namespace FindResponse {
       this.firstName = props.firstName
       this.middleName = props.middleName
       this.lastName = props.lastName
-      this.photo = props.photo
+      this.photoPath = props.photoPath
       this.description = props.description
       this.positions = props.positions
       this.departments = props.departments

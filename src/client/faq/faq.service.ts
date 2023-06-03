@@ -13,7 +13,6 @@ export class FaqService {
 
   public async findAll(): Promise<FindAllResponse.Faq[]> {
     const faqs = await this.em.find(Faq, {}, {})
-    console.log('🚀 ~ file: faq.service.ts:16 ~ FaqService ~ findAll ~ faqs:', faqs)
 
     const res: FindAllResponse.Faq[] = faqs.map(
       (e: Faq) =>

@@ -11,11 +11,16 @@ export class EmployeeService {
   constructor(private readonly em: EntityManager) {}
 
   public async findAll(): Promise<FindAllResponse.Employee[]> {
-    const employees = await this.em.find(Employee, {}, { populate: ['positions', 'departments'] })
+    const employees = await this.em.find(
+      Employee,
+      {},
+      { populate: ['photo', 'positions', 'departments'] },
+    )
     const res: FindAllResponse.Employee[] = employees.map(
       (e: Employee) =>
         new FindAllResponse.Employee({
           ...e,
+          photoPath: e.photo?.path,
           positions: e.positions.toArray(),
           departments: e.departments.toArray(),
         }),
@@ -33,6 +38,9 @@ export class EmployeeService {
         populate: ['positions', 'departments'],
       },
     )
+    if (employee.photo) {
+      await this.em.populate(employee, ['photo'])
+    }
 
     const res = new FindResponse.Employee({
       ...employee,
@@ -43,7 +51,7 @@ export class EmployeeService {
       departments: employee.departments
         .toArray()
         .map((department) => ({ value: department.id, label: department.name })),
-      photo: employee.photo?.path,
+      photoPath: employee.photo?.path,
     })
     return res
   }

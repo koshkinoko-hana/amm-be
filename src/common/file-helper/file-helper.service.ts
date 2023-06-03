@@ -2,7 +2,7 @@ import { UploadedFileResponse } from '@common/file-helper/dto/uploaded-file.resp
 import { FirebaseStorageProvider } from '@common/file-helper/firebase-storage.provider'
 import { Photo } from '@entities'
 import { InjectLogger, Logger } from '@logger'
-import { EntityManager } from '@mikro-orm/core'
+//import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
 import { uuid } from 'uuidv4'
 import PhotoType = Photo.PhotoType
@@ -12,7 +12,7 @@ export class FileHelperService {
   constructor(
     @InjectLogger(FileHelperService)
     private readonly logger: Logger,
-    private readonly em: EntityManager,
+    //    private readonly em: EntityManager,
     private readonly storageProvider: FirebaseStorageProvider,
   ) {
     this.logger.child('constructor').trace('<>')
@@ -27,7 +27,7 @@ export class FileHelperService {
 
     const path = await this.storageProvider.upload(file, folder, uuidName)
     const photo = new Photo({ title: title || '', path, type: folder })
-    await this.em.persistAndFlush(photo)
+    //    await this.em.persistAndFlush(photo)
     const fp = await this.storageProvider.getFile(path)
     return { id: photo.id, path: fp, title }
   }

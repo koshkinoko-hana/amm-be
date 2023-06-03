@@ -4,6 +4,7 @@ export namespace FindAllResponse {
     firstName: string
     middleName?: string
     lastName: string
+    photoPath?: string
     positions: Position[]
     departments: Department[]
 
@@ -12,6 +13,7 @@ export namespace FindAllResponse {
       this.firstName = props.firstName
       this.middleName = props.middleName
       this.lastName = props.lastName
+      this.photoPath = props.photoPath
       this.positions = props.positions
       this.departments = props.departments
     }

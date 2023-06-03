@@ -14,6 +14,10 @@ export namespace CreateRequest {
 
     @IsOptional()
     @IsString()
+    description!: string
+
+    @IsOptional()
+    @IsString()
     photoPath?: string
 
     @IsOptional()

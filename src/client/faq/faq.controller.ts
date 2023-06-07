@@ -33,8 +33,8 @@ export class FaqController {
 
   @Post()
   public async create(@Body() req: CreateRequest.Faq): Promise<number> {
-    await this.faqService.create(req)
-    return 1
+    const res = await this.faqService.create(req)
+    return res.id
   }
 
   @Delete(':id')

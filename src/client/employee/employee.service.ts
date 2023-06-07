@@ -1,29 +1,17 @@
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
-import { notFoundHandler } from '@common/utils/fail-handler'
 import { Department, Employee, Position } from '@entities'
-import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
-import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
 import { UpdateRequest } from './dto/update.request'
 
 @Injectable()
 export class EmployeeService {
-  constructor(
-    @InjectLogger(EmployeeService)
-    private readonly logger: Logger,
-    private readonly em: EntityManager,
-  ) {
-    this.logger.child('constructor').trace('<>')
-  }
+  constructor(private readonly em: EntityManager) {}
 
   public async findAll(): Promise<FindAllResponse.Employee[]> {
-    const logger = this.logger.child('findAll')
-    logger.trace('>')
     const employees = await this.em.find(Employee, {}, { populate: ['positions', 'departments'] })
-    logger.trace({ employees })
     const res: FindAllResponse.Employee[] = employees.map(
       (e: Employee) =>
         new FindAllResponse.Employee({
@@ -32,14 +20,10 @@ export class EmployeeService {
           departments: e.departments.toArray(),
         }),
     )
-
-    logger.trace({ res })
     return res
   }
 
   public async find(id: number) {
-    const logger = this.logger.child('findAll')
-    logger.trace('>')
     const employee = await this.em.findOneOrFail(
       Employee,
       {
@@ -47,11 +31,8 @@ export class EmployeeService {
       },
       {
         populate: ['positions', 'departments'],
-        failHandler: notFoundHandler(logger),
       },
     )
-
-    logger.traceObject({ employee })
 
     const res = new FindResponse.Employee({
       ...employee,
@@ -64,20 +45,16 @@ export class EmployeeService {
         .map((department) => ({ value: department.id, label: department.name })),
       photo: employee.photo?.path,
     })
-    logger.trace({ res }, '<')
     return res
   }
 
   public async update(id: number, req: UpdateRequest.Employee) {
-    const logger = this.logger.child('update')
-    logger.trace('>')
     const employee = await this.em.findOneOrFail(
       Employee,
       {
         id,
       },
       {
-        failHandler: notFoundHandler(logger),
         populate: ['photo', 'positions', 'departments'],
       },
     )
@@ -144,8 +121,6 @@ export class EmployeeService {
     }
     await this.em.persistAndFlush(employee)
 
-    logger.traceObject({ employee })
-
     return new EmployeeResponse({
       ...employee,
       positions: employee.positions.toArray(),
@@ -153,34 +128,5 @@ export class EmployeeService {
       photoId: employee.photo?.id,
       photoPath: employee.photo?.path,
     })
-  }
-  public async create(req: CreateRequest.Employee) {
-    const logger = this.logger.child('create')
-    logger.trace('>')
-    const employee = new Employee(req)
-    await this.em.persistAndFlush(employee)
-    logger.traceObject({ employee })
-    return employee
-  }
-
-  public async delete(id: number) {
-    const logger = this.logger.child('delete', { id })
-    logger.trace('>')
-
-    const employee = await this.em.findOneOrFail(
-      Employee,
-      {
-        id,
-      },
-      {
-        failHandler: notFoundHandler(logger),
-      },
-    )
-
-    await this.em.removeAndFlush(employee)
-
-    logger.traceObject({ employee })
-
-    return employee.id
   }
 }

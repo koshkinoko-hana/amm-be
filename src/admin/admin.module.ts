@@ -6,6 +6,7 @@ import { AuthModule } from './auth'
 import { UserModule } from './user'
 import { GalleryPhotoModule } from './galleryPhoto'
 import { DirectionModule } from './direction'
+import { FaqModule } from './faq'
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DirectionModule } from './direction'
     UserModule,
     GalleryPhotoModule,
     DirectionModule,
+    FaqModule,
   ],
 })
 export class AdminModule {}

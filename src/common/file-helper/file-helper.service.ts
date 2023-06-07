@@ -26,7 +26,7 @@ export class FileHelperService {
     const uuidName = uuid()
 
     const path = await this.storageProvider.upload(file, folder, uuidName)
-    const photo = new Photo({ title: title || '', path, type: folder })
+    const photo = new Photo({ title: title || '', path, type: folder, createdAt: new Date() })
     await this.em.persistAndFlush(photo)
     const fp = await this.storageProvider.getFile(path)
     return { id: photo.id, path: fp, title }

@@ -27,9 +27,7 @@ export class AuthController {
   }
 
   @Post('/register')
-  async register(
-  @Body() req: RegisterRequest.Credentials,
-  ): Promise<boolean> {
+  async register(@Body() req: RegisterRequest.Credentials): Promise<boolean> {
     const logger = this.logger.child('register', { req })
     logger.trace('>')
 

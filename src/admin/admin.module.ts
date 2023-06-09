@@ -4,9 +4,20 @@ import { Module } from '@nestjs/common'
 import { PositionModule } from './position'
 import { AuthModule } from './auth'
 import { UserModule } from './user'
+import { GalleryPhotoModule } from './galleryPhoto'
+import { DirectionModule } from './direction'
 import { FaqModule } from './faq'
 
 @Module({
-  imports: [AuthModule, DepartmentModule, EmployeeModule, PositionModule, UserModule, FaqModule],
+  imports: [
+    AuthModule,
+    DepartmentModule,
+    EmployeeModule,
+    PositionModule,
+    UserModule,
+    GalleryPhotoModule,
+    DirectionModule,
+    FaqModule,
+  ],
 })
 export class AdminModule {}

@@ -14,6 +14,9 @@ import { PositionModule } from './position'
     NewsModule,
     GalleryPhotoModule,
     DirectionModule,
+    ClientEmployeeModule,
+    ClientPositionModule,
+    ClientFaqModule
   ],
 })
 export class ClientModule {}

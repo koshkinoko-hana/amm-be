@@ -1,5 +1,4 @@
-import { StructureDataAuthGuard } from '@admin/auth/guards'
-import { Body, Delete, Get, Param, Post, Put, Controller, UseGuards } from '@nestjs/common'
+import { Body, Delete, Get, Param, Post, Put, Controller } from '@nestjs/common'
 import { FaqService } from './faq.service'
 import { FindResponse } from './dto/find.response'
 import { FindAllResponse } from './dto/find-all.response'
@@ -7,8 +6,7 @@ import { UpdateRequest } from './dto/update.request'
 import { FaqResponse } from './dto/faq.response'
 import { CreateRequest } from './dto/create.request'
 
-@UseGuards(StructureDataAuthGuard)
-@Controller('/admin/faqs')
+@Controller('/faqs')
 export class FaqController {
   constructor(private readonly faqService: FaqService) {}
 
@@ -35,8 +33,8 @@ export class FaqController {
 
   @Post()
   public async create(@Body() req: CreateRequest.Faq): Promise<number> {
-    await this.faqService.create(req)
-    return 1
+    const res = await this.faqService.create(req)
+    return res.id
   }
 
   @Delete(':id')

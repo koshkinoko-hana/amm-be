@@ -1,1 +1,1 @@
-export { PositionModule } from './position.module'
+export { ClientPositionModule } from './position.module'

@@ -8,4 +8,4 @@ import { PositionService } from './position.service'
   controllers: [PositionController],
   providers: [PositionService],
 })
-export class PositionModule {}
+export class ClientPositionModule {}

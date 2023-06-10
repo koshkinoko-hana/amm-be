@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
 import { UpdateRequest } from './dto/update.request'
+import { FindByDepartmentResponse } from './dto/find-by-department.response'
 
 @Injectable()
 export class EmployeeService {
@@ -23,6 +24,29 @@ export class EmployeeService {
           photoPath: e.photo?.path,
           positions: e.positions.toArray(),
           departments: e.departments.toArray(),
+        }),
+    )
+    return res
+  }
+
+  public async findByDepartment(
+    id_department: number,
+  ): Promise<FindByDepartmentResponse.Employee[]> {
+    const employees = await this.em.find(
+      Employee,
+      {},
+      { populate: ['photo', 'positions', 'departments'] },
+    )
+    const filteredEmployees = employees.filter((e: Employee) =>
+      e.departments.getItems().some((department) => department.id === Number(id_department)),
+    )
+    const res: FindByDepartmentResponse.Employee[] = filteredEmployees.map(
+      (e: Employee) =>
+        new FindByDepartmentResponse.Employee({
+          ...e,
+          photoPath: e.photo?.path,
+          positions: e.positions.getItems(),
+          departments: e.departments.getItems(),
         }),
     )
     return res
@@ -53,6 +77,7 @@ export class EmployeeService {
         .map((department) => ({ value: department.id, label: department.name })),
       photoPath: employee.photo?.path,
     })
+
     return res
   }
 

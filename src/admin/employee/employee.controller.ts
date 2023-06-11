@@ -77,6 +77,7 @@ export class EmployeeController {
   ): Promise<UploadedFileResponse> {
     const logger = this.logger.child('uploadPhoto')
     logger.trace('>')
+
     const res = await this.fileHelperService.uploadPhoto(
       file,
       Photo.PhotoType.UserPhoto,

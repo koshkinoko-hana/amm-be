@@ -8,6 +8,7 @@ import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
 import { UpdateRequest } from './dto/update.request'
+import { FirebaseStorageProvider } from '@common/file-helper/firebase-storage.provider'
 
 @Injectable()
 export class EmployeeService {
@@ -15,6 +16,7 @@ export class EmployeeService {
     @InjectLogger(EmployeeService)
     private readonly logger: Logger,
     private readonly em: EntityManager,
+    private readonly storageProvider: FirebaseStorageProvider,
   ) {
     this.logger.child('constructor').trace('<>')
   }
@@ -22,22 +24,29 @@ export class EmployeeService {
   public async findAll(): Promise<FindAllResponse.Employee[]> {
     const logger = this.logger.child('findAll')
     logger.trace('>')
+
     const employees = await this.em.find(
       Employee,
       {},
       { populate: ['photo', 'positions', 'departments'] },
     )
-    logger.trace({ employees })
-    const res: FindAllResponse.Employee[] = employees.map(
-      (e: Employee) =>
-        new FindAllResponse.Employee({
-          ...e,
-          photoPath: e.photo?.path,
-          positions: e.positions.toArray(),
-          departments: e.departments.toArray(),
-        }),
-    )
 
+    logger.trace({ employees })
+
+    const resolve: Promise<FindAllResponse.Employee>[] = employees.map(async (e: Employee) => {
+      let photoPath = ''
+      if (e.photo?.path) {
+        photoPath = await this.storageProvider.getFile(e.photo.path)
+      }
+      return new FindAllResponse.Employee({
+        ...e,
+        positions: e.positions.toArray(),
+        departments: e.departments.toArray(),
+        photoPath,
+      })
+    })
+
+    const res = await Promise.all(resolve)
     logger.trace({ res })
     return res
   }
@@ -62,6 +71,11 @@ export class EmployeeService {
 
     logger.traceObject({ employee })
 
+    let photoPath = ''
+    if (employee.photo?.path) {
+      photoPath = await this.storageProvider.getFile(employee.photo.path)
+    }
+
     const res = new FindResponse.Employee({
       ...employee,
       positions: employee.positions.toArray().map((position) => ({
@@ -71,7 +85,7 @@ export class EmployeeService {
       departments: employee.departments
         .toArray()
         .map((department) => ({ value: department.id, label: department.name })),
-      photoPath: employee.photo?.path,
+      photoPath,
     })
     logger.trace({ res }, '<')
     return res
@@ -95,19 +109,24 @@ export class EmployeeService {
     employee.middleName = req.middleName
     employee.lastName = req.lastName
     employee.description = req.description
+    employee.photoId = req.photoId
 
     if (req.photoPath) {
       if (employee.photo) {
         employee.photo.path = req.photoPath
+        employee.photoId = req.photoId
       } else {
         const photo = new Photo({
           path: req.photoPath,
           type: Photo.PhotoType.UserPhoto,
           title: 'title',
+          createdAt: new Date(),
         })
         employee.photo = photo
+        employee.photoId = photo.id
       }
     }
+
     const allPositions = await this.em.find(Position, {})
     const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
     const updatedPositions = new Set(req.positions.map((positionId) => positionId.value))
@@ -172,10 +191,9 @@ export class EmployeeService {
       positions: employee.positions.toArray(),
       departments: employee.departments.toArray(),
       photoId: employee.photo?.id,
-      photoPath: employee.photo?.path,
     })
   }
-  // создание новой записи
+
   public async create(req: CreateRequest.Employee) {
     const logger = this.logger.child('create')
     logger.trace('>')
@@ -184,6 +202,7 @@ export class EmployeeService {
       middleName: req.middleName,
       lastName: req.lastName,
       description: req.description,
+      photoId: req.photoId,
     })
 
     const allPositions = await this.em.find(Position, {})
@@ -243,19 +262,9 @@ export class EmployeeService {
         }
       }
     }
-    if (req.photoPath) {
-      if (employee.photo) {
-        employee.photo.path = req.photoPath
-      } else {
-        const photo = new Photo({
-          path: req.photoPath,
-          type: Photo.PhotoType.UserPhoto,
-          title: 'title',
-        })
-        employee.photo = photo
-      }
-    }
+
     await this.em.persistAndFlush(employee)
+
     logger.traceObject({ employee })
     return employee
   }

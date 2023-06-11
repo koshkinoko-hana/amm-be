@@ -6,10 +6,14 @@ import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
 import { UpdateRequest } from './dto/update.request'
 import { FindByDepartmentResponse } from './dto/find-by-department.response'
+import { FirebaseStorageProvider } from '@common/file-helper/firebase-storage.provider'
 
 @Injectable()
 export class EmployeeService {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    private readonly storageProvider: FirebaseStorageProvider,
+  ) {}
 
   public async findAll(): Promise<FindAllResponse.Employee[]> {
     const employees = await this.em.find(
@@ -17,14 +21,19 @@ export class EmployeeService {
       {},
       { populate: ['photo', 'positions', 'departments'] },
     )
-    const res: FindAllResponse.Employee[] = employees.map(
-      (e: Employee) =>
-        new FindAllResponse.Employee({
+    const res: FindAllResponse.Employee[] = await Promise.all(
+      employees.map(async (e: Employee) => {
+        let photoPath = ''
+        if (e.photo?.path) {
+          photoPath = await this.storageProvider.getFile(e.photo.path)
+        }
+        return new FindAllResponse.Employee({
           ...e,
-          photoPath: e.photo?.path,
+          photoPath,
           positions: e.positions.toArray(),
           departments: e.departments.toArray(),
-        }),
+        })
+      }),
     )
     return res
   }
@@ -40,14 +49,19 @@ export class EmployeeService {
     const filteredEmployees = employees.filter((e: Employee) =>
       e.departments.getItems().some((department) => department.id === Number(id_department)),
     )
-    const res: FindByDepartmentResponse.Employee[] = filteredEmployees.map(
-      (e: Employee) =>
-        new FindByDepartmentResponse.Employee({
+    const res: FindByDepartmentResponse.Employee[] = await Promise.all(
+      filteredEmployees.map(async (e: Employee) => {
+        let photoPath = ''
+        if (e.photo?.path) {
+          photoPath = await this.storageProvider.getFile(e.photo.path)
+        }
+        return new FindByDepartmentResponse.Employee({
           ...e,
-          photoPath: e.photo?.path,
+          photoPath,
           positions: e.positions.getItems(),
           departments: e.departments.getItems(),
-        }),
+        })
+      }),
     )
     return res
   }

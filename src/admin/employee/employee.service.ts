@@ -280,9 +280,18 @@ export class EmployeeService {
       },
       {
         failHandler: notFoundHandler(logger),
+        populate: ['positions', 'departments', 'photo'],
       },
     )
+    if (employee.photo) {
+      if (employee.photo.path) await this.storageProvider.deleteFile(employee.photo.path)
+      await this.em.removeAndFlush(employee.photo)
+    }
 
+    employee.positions.removeAll()
+    employee.departments.removeAll()
+
+    await this.em.flush()
     await this.em.removeAndFlush(employee)
 
     logger.traceObject({ employee })

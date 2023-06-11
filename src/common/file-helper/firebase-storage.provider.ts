@@ -1,6 +1,6 @@
 import { getDownloadURL } from '@firebase/storage'
 import { Injectable } from '@nestjs/common'
-import { getStorage, ref, uploadBytes } from 'firebase/storage'
+import { deleteObject, getStorage, ref, uploadBytes } from 'firebase/storage'
 
 @Injectable()
 export class FirebaseStorageProvider {
@@ -22,5 +22,11 @@ export class FirebaseStorageProvider {
     const fullpath = await getDownloadURL(ref(storage, path))
 
     return fullpath
+  }
+
+  public async deleteFile(path: string): Promise<void> {
+    const storage = getStorage()
+    const fileRef = ref(storage, path)
+    await deleteObject(fileRef)
   }
 }

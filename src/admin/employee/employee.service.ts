@@ -1,6 +1,6 @@
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { notFoundHandler } from '@common/utils/fail-handler'
-import { Department, Employee, Photo, Position } from '@entities'
+import { Department, Employee, Position } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
@@ -109,23 +109,7 @@ export class EmployeeService {
     employee.middleName = req.middleName
     employee.lastName = req.lastName
     employee.description = req.description
-    employee.photoId = req.photoId
-
-    if (req.photoPath) {
-      if (employee.photo) {
-        employee.photo.path = req.photoPath
-        employee.photoId = req.photoId
-      } else {
-        const photo = new Photo({
-          path: req.photoPath,
-          type: Photo.PhotoType.UserPhoto,
-          title: 'title',
-          createdAt: new Date(),
-        })
-        employee.photo = photo
-        employee.photoId = photo.id
-      }
-    }
+    if (req.photoId !== undefined) employee.photoId = req.photoId
 
     const allPositions = await this.em.find(Position, {})
     const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
@@ -159,11 +143,12 @@ export class EmployeeService {
       employee.departments.getItems().map((department) => department.id),
     )
     const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId.value))
-
+    await this.em.persistAndFlush(employee)
     for (const departmentId of updatedDepartments) {
       if (!currentDepartments.has(departmentId)) {
-        const department = allDepartments.find((department) => department.id === departmentId)
-
+        const department = allDepartments.find((department) => {
+          return department.id === departmentId
+        })
         if (!department) {
           throw new Error(`Position with ID ${departmentId} not found`)
         }

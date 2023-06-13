@@ -93,9 +93,8 @@ export class EmployeeController {
     const logger = this.logger.child('create')
     logger.trace('>')
     const res = await this.employeeService.create(req)
-
     logger.trace({ res }, '<')
-    return 1
+    return 201
   }
 
   @Delete(':id')

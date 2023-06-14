@@ -1,6 +1,6 @@
 import { InjectLogger, Logger } from '@logger'
 import { AuthGuard } from './auth.guard'
-import {User} from '@entities'
+import { User } from '@entities'
 
 export class NewsModeratorAuthGuard extends AuthGuard {
   constructor(

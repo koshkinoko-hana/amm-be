@@ -1,4 +1,4 @@
-import { Photo } from '@common/entities/photo.entity'
+import { Photo } from './photo.entity'
 import { Collection, Entity, ManyToMany, OneToOne, Property } from '@mikro-orm/core'
 import { Auditable } from './auditable.entity'
 import { Position } from './position.entity'

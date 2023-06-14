@@ -1,7 +1,7 @@
 import { CreateRequest } from '@admin/employee/dto/create.request'
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { FindResponse } from '@admin/employee/dto/find.response'
-import { UploadPhoto } from '@admin/employee/dto/upload-photo'
+import { UploadPhoto } from '@common/dto/upload-photo'
 import { UploadedFileResponse } from '@common/file-helper/dto/uploaded-file.response'
 import { FileHelperService } from '@common/file-helper/file-helper.service'
 import { Photo } from '@entities'

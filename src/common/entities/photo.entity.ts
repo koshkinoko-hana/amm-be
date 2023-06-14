@@ -23,5 +23,6 @@ export class Photo extends Identified {
 export namespace Photo {
   export enum PhotoType {
     UserPhoto = 'user-photo',
+    NewsImage = 'news-image',
   }
 }

@@ -86,7 +86,7 @@ export class AuthService {
       User,
       { login },
       badRequestHandler(logger, {
-        message: () => 'Invalid credentials!',
+        message: () => 'Invalid credentials!456',
         logLevel: 'warn',
       }),
     )
@@ -130,7 +130,7 @@ export class AuthService {
     const { sub: login, iss } = tokenPayload
 
     if (iss !== this.tokenIssuer) {
-      const err = new BadRequestException('Invalid credentials!')
+      const err = new BadRequestException('Invalid credentials!678')
       logger.error(err, '! invalid issuer')
       throw err
     }
@@ -140,7 +140,7 @@ export class AuthService {
       { login },
       {
         failHandler: badRequestHandler(logger, {
-          message: () => 'Invalid credentials!',
+          message: () => 'Invalid credentials!567',
           logLevel: 'warn',
         }),
       },

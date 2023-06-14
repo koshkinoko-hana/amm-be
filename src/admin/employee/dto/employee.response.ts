@@ -17,7 +17,6 @@ export class EmployeeResponse {
     this.departments = props.departments
     this.photoId = props.photoId
     this.photoPath = props.photoPath
-    this.positions = props.positions
   }
 }
 

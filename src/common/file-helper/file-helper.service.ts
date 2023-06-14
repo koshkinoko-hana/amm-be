@@ -31,4 +31,20 @@ export class FileHelperService {
     const fp = await this.storageProvider.getFile(path)
     return { id: photo.id, path: fp, title }
   }
+
+  public async deleteFile(path: string): Promise<void> {
+    const logger = this.logger.child('deleteFile', { path })
+    logger.trace('>')
+
+    await this.storageProvider.deleteFile(path)
+
+    const photo = await this.em.findOne(Photo, { path })
+
+    if (photo) {
+      this.em.remove(photo)
+      await this.em.flush()
+    }
+
+    logger.trace('<')
+  }
 }

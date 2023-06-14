@@ -22,7 +22,7 @@ export namespace UpdateRequest {
     photoId?: number
 
     @IsOptional()
-    @IsNumber()
+    @IsString()
     photoPath?: string
 
     @IsArray()

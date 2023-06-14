@@ -15,6 +15,9 @@ export class Employee extends Auditable {
   @Property()
   lastName: string
 
+  @Property()
+  photoId?: number
+
   @OneToOne({ nullable: true })
   photo?: Photo
 
@@ -38,5 +41,6 @@ export class Employee extends Auditable {
     this.photo = props.photo
     this.description = props.description
     this.worksSince = props.worksSince
+    this.photoId = props.photoId
   }
 }

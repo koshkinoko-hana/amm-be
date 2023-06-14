@@ -2,21 +2,20 @@ import { Module } from '@nestjs/common'
 import { NewsModule } from './news'
 import { GalleryPhotoModule } from './galleryPhoto'
 import { DirectionModule } from './direction'
-import { DepartmentModule } from './department'
-import { EmployeeModule } from './employee'
-import { PositionModule } from './position'
+import { ClientDepartmentModule } from './department'
+import { ClientEmployeeModule } from './employee'
+import { ClientPositionModule } from './position'
+import { ClientFaqModule } from './faq'
 
 @Module({
   imports: [
-    DepartmentModule,
-    EmployeeModule,
-    PositionModule,
     NewsModule,
     GalleryPhotoModule,
     DirectionModule,
     ClientEmployeeModule,
     ClientPositionModule,
-    ClientFaqModule
+    ClientDepartmentModule,
+    ClientFaqModule,
   ],
 })
 export class ClientModule {}

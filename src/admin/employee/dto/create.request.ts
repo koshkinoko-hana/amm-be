@@ -1,3 +1,4 @@
+import { DepartmentPositionShort } from '@common/dto/department-position-short'
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export namespace CreateRequest {
@@ -25,9 +26,6 @@ export namespace CreateRequest {
     photoId?: number
 
     @IsArray()
-    positions!: number[]
-
-    @IsArray()
-    departments!: number[]
+    departmentPositions!: DepartmentPositionShort[]
   }
 }

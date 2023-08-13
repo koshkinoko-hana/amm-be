@@ -1,9 +1,13 @@
 import { Option } from '@common/dto/option'
 import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
-import { Department } from '@entities'
+import { Department, Employee } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
+import {
+  mapEmployeeToEmployeeShort,
+  mapEmployeeDepartmentPositionToEmployeeShortWithPosition,
+} from '@utils'
 import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
@@ -52,12 +56,24 @@ export class DepartmentService {
       },
       {
         failHandler: notFoundHandler(logger),
+        populate: [
+          'employeesWithPositions',
+          'employeesWithPositions.employee',
+          'employeesWithPositions.position',
+          'head',
+        ],
       },
     )
 
     logger.traceObject({ department })
 
-    const res = new FindResponse.Department(department)
+    const res = new FindResponse.Department({
+      ...department,
+      head: mapEmployeeToEmployeeShort(department.head),
+      employees: department.employeesWithPositions
+        .getItems()
+        .map(mapEmployeeDepartmentPositionToEmployeeShortWithPosition),
+    })
     logger.trace({ res }, '<')
     return res
   }
@@ -77,6 +93,16 @@ export class DepartmentService {
     department.name = req.name
     department.description = req.description
     department.competencies = req.competencies
+
+    const head = await this.em.findOneOrFail(
+      Employee,
+      { id: req.head },
+      {
+        failHandler: notFoundHandler(logger),
+      },
+    )
+
+    department.head = head
     await this.em.persistAndFlush(department)
 
     logger.traceObject({ department })
@@ -95,7 +121,14 @@ export class DepartmentService {
         message: () => `Department name ${req.name} is already in use.`,
       }),
     )
-    const department = new Department(req)
+    const head = await this.em.findOneOrFail(
+      Employee,
+      { id: req.headId },
+      {
+        failHandler: notFoundHandler(logger),
+      },
+    )
+    const department = new Department({ ...req, head })
     await this.em.persistAndFlush(department)
 
     logger.traceObject({ department })

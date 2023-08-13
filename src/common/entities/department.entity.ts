@@ -1,4 +1,5 @@
-import { Collection, Entity, ManyToMany, Property } from '@mikro-orm/core'
+import { EmployeeDepartmentPosition } from '@common/entities/employee-position.entity'
+import { Collection, Entity, ManyToOne, OneToMany, Property } from '@mikro-orm/core'
 import { Auditable } from './auditable.entity'
 import { Employee } from './employee.entity'
 
@@ -13,13 +14,18 @@ export class Department extends Auditable {
   @Property({ type: 'json' })
   competencies: string[]
 
-  @ManyToMany(() => Employee, (d) => d.departments, { owner: true })
-  employees: Collection<Employee> = new Collection<Employee>(this)
+  @OneToMany(() => EmployeeDepartmentPosition, (ep) => ep.department)
+  employeesWithPositions: Collection<EmployeeDepartmentPosition> =
+    new Collection<EmployeeDepartmentPosition>(this)
 
-  constructor(props: Omit<Department, keyof Auditable | 'employees'>) {
+  @ManyToOne(() => Employee)
+  head: Employee
+
+  constructor(props: Omit<Department, keyof Auditable | 'employeesWithPositions'>) {
     super()
     this.name = props.name
     this.description = props.description
+    this.head = props.head
     this.competencies = props.competencies
   }
 }

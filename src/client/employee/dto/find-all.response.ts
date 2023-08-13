@@ -5,8 +5,7 @@ export namespace FindAllResponse {
     middleName?: string
     lastName: string
     photoPath?: string
-    positions: Position[]
-    departments: Department[]
+    departmentPosition
 
     constructor(props: Employee) {
       this.id = props.id

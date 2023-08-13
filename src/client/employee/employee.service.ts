@@ -19,7 +19,14 @@ export class EmployeeService {
     const employees = await this.em.find(
       Employee,
       {},
-      { populate: ['photo', 'positions', 'departments'] },
+      {
+        populate: [
+          'photo',
+          'employeeDepartmentPosition',
+          'employeeDepartmentPosition.position',
+          'employeeDepartmentPosition.department',
+        ],
+      },
     )
     const res: FindAllResponse.Employee[] = await Promise.all(
       employees.map(async (e: Employee) => {
@@ -102,7 +109,12 @@ export class EmployeeService {
         id,
       },
       {
-        populate: ['photo', 'positions', 'departments'],
+        populate: [
+          'photo',
+          'employeeDepartmentPosition',
+          'employeeDepartmentPosition.employee',
+          'employeeDepartmentPosition.position',
+        ],
       },
     )
 
@@ -112,7 +124,9 @@ export class EmployeeService {
     employee.description = req.description
 
     const allPositions = await this.em.find(Position, {})
-    const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
+    const currentPositions = new Set(
+      employee.employeeDepartmentPosition.getItems().map((position) => position.id),
+    )
     const updatedPositions = new Set(req.positions.map((positionId) => positionId.value))
 
     for (const positionId of updatedPositions) {

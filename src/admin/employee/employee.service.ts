@@ -1,9 +1,12 @@
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
+import { Option } from '@common/dto/option'
+import { EmployeeDepartmentPosition } from '@common/entities/employee-position.entity'
 import { notFoundHandler } from '@common/utils/fail-handler'
 import { Department, Employee, Position } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { mapEmployeeDepartmentPositionToDepartmentPosition, mapEmployeeToOption } from '@utils'
 import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
@@ -28,7 +31,14 @@ export class EmployeeService {
     const employees = await this.em.find(
       Employee,
       {},
-      { populate: ['photo', 'positions', 'departments'] },
+      {
+        populate: [
+          'photo',
+          'employeeDepartmentPositions',
+          'employeeDepartmentPositions.position',
+          'employeeDepartmentPositions.department',
+        ],
+      },
     )
 
     logger.trace({ employees })
@@ -40,13 +50,27 @@ export class EmployeeService {
       }
       return new FindAllResponse.Employee({
         ...e,
-        positions: e.positions.toArray(),
-        departments: e.departments.toArray(),
+        departmentPositions: e.employeeDepartmentPositions
+          .getItems()
+          .map(mapEmployeeDepartmentPositionToDepartmentPosition),
         photoPath,
       })
     })
 
     const res = await Promise.all(resolve)
+    logger.trace({ res })
+    return res
+  }
+
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+
+    const employees = await this.em.find(Employee, {})
+
+    logger.trace({ employees })
+
+    const res = employees.map((e) => mapEmployeeToOption(e))
     logger.trace({ res })
     return res
   }
@@ -60,7 +84,11 @@ export class EmployeeService {
         id,
       },
       {
-        populate: ['positions', 'departments'],
+        populate: [
+          'employeeDepartmentPositions',
+          'employeeDepartmentPositions.position',
+          'employeeDepartmentPositions.department',
+        ],
         failHandler: notFoundHandler(logger),
       },
     )
@@ -78,19 +106,15 @@ export class EmployeeService {
 
     const res = new FindResponse.Employee({
       ...employee,
-      positions: employee.positions.toArray().map((position) => ({
-        value: position.id,
-        label: position.name,
-      })),
-      departments: employee.departments
-        .toArray()
-        .map((department) => ({ value: department.id, label: department.name })),
+      departmentPositions: employee.employeeDepartmentPositions
+        .getItems()
+        .map(mapEmployeeDepartmentPositionToDepartmentPosition),
       photoPath,
     })
     logger.trace({ res }, '<')
     return res
   }
-  // обновление полей
+
   public async update(id: number, req: UpdateRequest.Employee) {
     const logger = this.logger.child('update')
     logger.trace('>')
@@ -101,7 +125,12 @@ export class EmployeeService {
       },
       {
         failHandler: notFoundHandler(logger),
-        populate: ['photo', 'positions', 'departments'],
+        populate: [
+          'photo',
+          'employeeDepartmentPositions',
+          'employeeDepartmentPositions.position',
+          'employeeDepartmentPositions.department',
+        ],
       },
     )
 
@@ -111,72 +140,57 @@ export class EmployeeService {
     employee.description = req.description
     if (req.photoId !== undefined) employee.photoId = req.photoId
 
-    const allPositions = await this.em.find(Position, {})
-    const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
-    const updatedPositions = new Set(req.positions.map((positionId) => positionId.value))
-
-    for (const positionId of updatedPositions) {
-      if (!currentPositions.has(positionId)) {
-        const position = allPositions.find((position) => position.id === positionId)
-
-        if (!position) {
-          throw new Error(`Position with ID ${positionId} not found`)
-        }
-
-        employee.positions.add(position)
-      }
-    }
-    for (const positionId of currentPositions) {
-      if (!updatedPositions.has(positionId)) {
-        const position = employee.positions
-          .getItems()
-          .find((position) => position.id === positionId)
-
-        if (position) {
-          employee.positions.remove(position)
-        }
-      }
-    }
-    const allDepartments = await this.em.find(Department, {})
-
-    const currentDepartments = new Set(
-      employee.departments.getItems().map((department) => department.id),
+    const currentDepartmentPositionsMap = new Map(
+      employee.employeeDepartmentPositions
+        .getItems()
+        .map((edp) => [`${edp.position.id}_${edp.department?.id ?? ''}`, edp]),
     )
-    const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId.value))
-    await this.em.persistAndFlush(employee)
-    for (const departmentId of updatedDepartments) {
-      if (!currentDepartments.has(departmentId)) {
-        const department = allDepartments.find((department) => {
-          return department.id === departmentId
+    const updatedDepartmentPositionsSet = new Set(
+      employee.employeeDepartmentPositions
+        .getItems()
+        .map((edp) => `${edp.position.id}_${edp.department?.id ?? ''}`),
+    )
+
+    const positionList = await this.em.find(Position, {})
+    const departmentList = await this.em.find(Department, {})
+
+    for (const dp of updatedDepartmentPositionsSet) {
+      if (!currentDepartmentPositionsMap.has(dp)) {
+        const [positionId, departmentId] = dp.split('_')
+        const position = positionList.find((p) => p.id === (positionId as unknown as number))
+        if (!position) {
+          throw new NotFoundException(`Position with ID ${positionId} not found`)
+        }
+
+        let department: Department | undefined
+
+        if (departmentId !== '') {
+          department = departmentList.find((d) => d.id === (departmentId as unknown as number))
+          if (!department) {
+            throw new NotFoundException(`Position with ID ${positionId} not found`)
+          }
+        }
+
+        const edp = new EmployeeDepartmentPosition({
+          employee,
+          department,
+          position,
         })
-        if (!department) {
-          throw new Error(`Position with ID ${departmentId} not found`)
-        }
-
-        employee.departments.add(department)
+        this.em.persist(edp)
+      } else {
+        currentDepartmentPositionsMap.delete(dp)
       }
     }
-    for (const departmentId of currentDepartments) {
-      if (!updatedDepartments.has(departmentId)) {
-        const department = employee.departments
-          .getItems()
-          .find((department) => department.id === departmentId)
 
-        if (department) {
-          employee.departments.remove(department)
-        }
-      }
+    for (const dp of currentDepartmentPositionsMap.values()) {
+      this.em.remove(dp)
     }
+
     await this.em.persistAndFlush(employee)
 
     logger.traceObject({ employee })
 
-    return new EmployeeResponse({
-      ...employee,
-      positions: employee.positions.toArray(),
-      departments: employee.departments.toArray(),
-      photoId: employee.photo?.id,
-    })
+    return
   }
 
   public async create(req: CreateRequest.Employee) {
@@ -190,65 +204,24 @@ export class EmployeeService {
       photoId: req.photoId,
     })
 
-    const allPositions = await this.em.find(Position, {})
-    const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
-    const updatedPositions = new Set(req.positions.map((positionId) => positionId))
-
-    for (const positionId of updatedPositions) {
-      if (!currentPositions.has(positionId)) {
-        const position = allPositions.find((position) => position.id === positionId)
-
-        if (!position) {
-          throw new Error(`Position with ID ${positionId} not found`)
-        }
-
-        employee.positions.add(position)
-      }
-    }
-
-    for (const positionId of currentPositions) {
-      if (!updatedPositions.has(positionId)) {
-        const position = employee.positions
-          .getItems()
-          .find((position) => position.id === positionId)
-
-        if (position) {
-          employee.positions.remove(position)
-        }
-      }
-    }
-
-    const allDepartments = await this.em.find(Department, {})
-    const currentDepartments = new Set(
-      employee.departments.getItems().map((department) => department.id),
-    )
-    const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId))
-
-    for (const departmentId of updatedDepartments) {
-      if (!currentDepartments.has(departmentId)) {
-        const department = allDepartments.find((department) => department.id === departmentId)
-
-        if (!department) {
-          throw new Error(`Department with ID ${departmentId} not found`)
-        }
-
-        employee.departments.add(department)
-      }
-    }
-
-    for (const departmentId of currentDepartments) {
-      if (!updatedDepartments.has(departmentId)) {
-        const department = employee.departments
-          .getItems()
-          .find((department) => department.id === departmentId)
-
-        if (department) {
-          employee.departments.remove(department)
-        }
-      }
-    }
-
     await this.em.persistAndFlush(employee)
+
+    const positionList = await this.em.find(Position, {})
+    const departmentList = await this.em.find(Department, {})
+
+    for (const dp of req.departmentPositions) {
+      const position = positionList.find((p) => (p.id = dp.positionId))
+      if (!position) {
+        throw new NotFoundException(
+          `position id=${dp.positionId} name=${dp.positionName} not found`,
+        )
+      }
+      const edp = new EmployeeDepartmentPosition({
+        employee,
+        position: positionList.find((p) => (p.id = dp.positionId)),
+        department: departmentList.find((d) => (d.id = dp.positionId)),
+      })
+    }
 
     logger.traceObject({ employee })
     return employee
@@ -273,8 +246,7 @@ export class EmployeeService {
       await this.em.removeAndFlush(employee.photo)
     }
 
-    employee.positions.removeAll()
-    employee.departments.removeAll()
+    employee.employeeDepartmentPosition.removeAll()
 
     await this.em.flush()
     await this.em.removeAndFlush(employee)

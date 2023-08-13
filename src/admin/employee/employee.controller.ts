@@ -1,6 +1,7 @@
 import { CreateRequest } from '@admin/employee/dto/create.request'
 import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { FindResponse } from '@admin/employee/dto/find.response'
+import { Option } from '@common/dto/option'
 import { UploadPhoto } from '@common/dto/upload-photo'
 import { UploadedFileResponse } from '@common/file-helper/dto/uploaded-file.response'
 import { FileHelperService } from '@common/file-helper/file-helper.service'
@@ -34,6 +35,16 @@ export class EmployeeController {
     private readonly fileHelperService: FileHelperService,
   ) {
     this.logger.child('constructor').trace('<>')
+  }
+
+  @Get('/options')
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+    const res = await this.employeeService.findOptions()
+
+    logger.trace({ res }, '<')
+    return res
   }
 
   @Get(':id')

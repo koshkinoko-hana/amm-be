@@ -1,11 +1,13 @@
 export namespace FindAllResponse {
-  export class Department {
+  export class Album {
     id: number
     name: string
+    date: Date
 
-    constructor(props: Department) {
+    constructor(props: Album) {
       this.id = props.id
       this.name = props.name
+      this.date = props.date
     }
   }
 }

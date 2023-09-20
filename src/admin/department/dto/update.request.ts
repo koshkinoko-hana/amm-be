@@ -13,5 +13,14 @@ export namespace UpdateRequest {
 
     @IsArray()
     competencies!: string[]
+
+    @IsString()
+    address!: string
+
+    @IsArray()
+    phones!: string[]
+
+    @IsString()
+    email!: string
   }
 }

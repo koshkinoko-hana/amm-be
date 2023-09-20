@@ -1,6 +1,8 @@
+import { Photo } from '@entities'
 import { getDownloadURL } from '@firebase/storage'
 import { Injectable } from '@nestjs/common'
 import { deleteObject, getStorage, ref, uploadBytes } from 'firebase/storage'
+import LinkResource = Photo.LinkResource
 
 @Injectable()
 export class FirebaseStorageProvider {
@@ -17,16 +19,22 @@ export class FirebaseStorageProvider {
     return uploaded.metadata.fullPath
   }
 
-  public async getFile(path: string): Promise<string> {
+  public async getFile(photo: Photo): Promise<string> {
+    if (photo.linkResource === LinkResource.EXTERNAL_LINK) {
+      return photo.path
+    }
     const storage = getStorage()
-    const fullpath = await getDownloadURL(ref(storage, path))
+    const fullpath = await getDownloadURL(ref(storage, photo.path))
 
     return fullpath
   }
 
-  public async deleteFile(path: string): Promise<void> {
+  public async deleteFile(photo: Photo): Promise<void> {
+    if (photo.linkResource === LinkResource.EXTERNAL_LINK) {
+      return
+    }
     const storage = getStorage()
-    const fileRef = ref(storage, path)
+    const fileRef = ref(storage, photo.path)
     await deleteObject(fileRef)
   }
 }

@@ -1,11 +1,10 @@
-import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { Option } from '@common/dto/option'
-import { EmployeeDepartmentPosition } from '@common/entities/employee-position.entity'
+import { EmployeeDepartmentPosition } from '@common/entities/employee-department-position.entity'
 import { notFoundHandler } from '@common/utils/fail-handler'
-import { Department, Employee, Position } from '@entities'
+import { Department, Employee, Photo, Position } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { mapEmployeeDepartmentPositionToDepartmentPosition, mapEmployeeToOption } from '@utils'
 import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
@@ -46,12 +45,13 @@ export class EmployeeService {
     const resolve: Promise<FindAllResponse.Employee>[] = employees.map(async (e: Employee) => {
       let photoPath = ''
       if (e.photo?.path) {
-        photoPath = await this.storageProvider.getFile(e.photo.path)
+        photoPath = await this.storageProvider.getFile(e.photo)
       }
       return new FindAllResponse.Employee({
         ...e,
         departmentPositions: e.employeeDepartmentPositions
           .getItems()
+          .filter((edp) => edp.department === null)
           .map(mapEmployeeDepartmentPositionToDepartmentPosition),
         photoPath,
       })
@@ -88,6 +88,7 @@ export class EmployeeService {
           'employeeDepartmentPositions',
           'employeeDepartmentPositions.position',
           'employeeDepartmentPositions.department',
+          'photo',
         ],
         failHandler: notFoundHandler(logger),
       },
@@ -101,7 +102,7 @@ export class EmployeeService {
 
     let photoPath = ''
     if (employee.photo?.path) {
-      photoPath = await this.storageProvider.getFile(employee.photo.path)
+      photoPath = await this.storageProvider.getFile(employee.photo)
     }
 
     const res = new FindResponse.Employee({
@@ -138,7 +139,18 @@ export class EmployeeService {
     employee.middleName = req.middleName
     employee.lastName = req.lastName
     employee.description = req.description
-    if (req.photoId !== undefined) employee.photoId = req.photoId
+    if (req.photoId !== undefined) {
+      const photo = await this.em.findOneOrFail(
+        Photo,
+        {
+          id: req.photoId,
+        },
+        {
+          failHandler: notFoundHandler(logger),
+        },
+      )
+      employee.photo = photo
+    }
 
     const currentDepartmentPositionsMap = new Map(
       employee.employeeDepartmentPositions
@@ -159,7 +171,7 @@ export class EmployeeService {
         const [positionId, departmentId] = dp.split('_')
         const position = positionList.find((p) => p.id === (positionId as unknown as number))
         if (!position) {
-          throw new NotFoundException(`Position with ID ${positionId} not found`)
+          throw new NotFoundException(`Кафедра с ID ${positionId} не найдена`)
         }
 
         let department: Department | undefined
@@ -167,7 +179,7 @@ export class EmployeeService {
         if (departmentId !== '') {
           department = departmentList.find((d) => d.id === (departmentId as unknown as number))
           if (!department) {
-            throw new NotFoundException(`Position with ID ${positionId} not found`)
+            throw new NotFoundException(`Кафедра с ID ${departmentId} не найдена`)
           }
         }
 
@@ -201,30 +213,50 @@ export class EmployeeService {
       middleName: req.middleName,
       lastName: req.lastName,
       description: req.description,
-      photoId: req.photoId,
     })
+
+    if (req.photoId) {
+      const photo = await this.em.findOneOrFail(
+        Photo,
+        {
+          id: req.photoId,
+        },
+        {
+          failHandler: notFoundHandler(logger),
+        },
+      )
+      employee.photo = photo
+    }
 
     await this.em.persistAndFlush(employee)
 
     const positionList = await this.em.find(Position, {})
     const departmentList = await this.em.find(Department, {})
 
-    for (const dp of req.departmentPositions) {
-      const position = positionList.find((p) => (p.id = dp.positionId))
+    for (const dp of req.departmentPositions || []) {
+      const position = positionList.find((p) => p.id === dp.positionId)
       if (!position) {
         throw new NotFoundException(
-          `position id=${dp.positionId} name=${dp.positionName} not found`,
+          `Должность id=${dp.positionId} название=${dp.positionName} не найдена`,
+        )
+      }
+      const department = departmentList.find((d) => d.id === dp.departmentId)
+      if (!department) {
+        throw new NotFoundException(
+          `Кафедра id=${dp.departmentId} название=${dp.departmentName} не найдена`,
         )
       }
       const edp = new EmployeeDepartmentPosition({
         employee,
-        position: positionList.find((p) => (p.id = dp.positionId)),
+        position,
         department: departmentList.find((d) => (d.id = dp.positionId)),
       })
+
+      await this.em.persist(edp)
     }
+    await this.em.flush()
 
     logger.traceObject({ employee })
-    return employee
   }
 
   public async delete(id: number) {
@@ -238,21 +270,28 @@ export class EmployeeService {
       },
       {
         failHandler: notFoundHandler(logger),
-        populate: ['positions', 'departments', 'photo'],
+        populate: ['employeeDepartmentPositions', 'photo'],
       },
     )
+
+    const department = await this.em.findOne(Department, { head: { id } })
+
+    if (department) {
+      throw new BadRequestException(
+        `Нельзя удалить сотрудника, т.к. он назначен заведующим кафедры ${department.name}`,
+      )
+    }
+
     if (employee.photo) {
-      if (employee.photo.path) await this.storageProvider.deleteFile(employee.photo.path)
+      if (employee.photo.path) await this.storageProvider.deleteFile(employee.photo)
       await this.em.removeAndFlush(employee.photo)
     }
 
-    employee.employeeDepartmentPosition.removeAll()
+    employee.employeeDepartmentPositions.removeAll()
 
     await this.em.flush()
     await this.em.removeAndFlush(employee)
 
     logger.traceObject({ employee })
-
-    return employee.id
   }
 }

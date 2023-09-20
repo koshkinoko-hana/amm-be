@@ -1,9 +1,10 @@
-import { Entity, Property } from '@mikro-orm/core'
+import { Album } from './album.entity'
+import { Entity, ManyToOne, Property } from '@mikro-orm/core'
 import { Identified } from './identified.entity'
 
 @Entity()
 export class Photo extends Identified {
-  @Property()
+  @Property({ nullable: true })
   title?: string
 
   @Property()
@@ -13,14 +14,21 @@ export class Photo extends Identified {
   type: Photo.PhotoType
 
   @Property()
-  createdAt: Date
+  linkResource: Photo.LinkResource
 
-  constructor(props: Omit<Photo, keyof Identified>) {
+  @Property()
+  createdAt: Date = new Date()
+
+  @ManyToOne(() => Album, { nullable: true })
+  album?: Album
+
+  constructor(props: Omit<Photo, keyof Identified | 'createdAt'>) {
     super()
     this.title = props.title
     this.path = props.path
     this.type = props.type
-    this.createdAt = props.createdAt
+    this.linkResource = props.linkResource
+    this.album = props.album
   }
 }
 
@@ -29,5 +37,10 @@ export namespace Photo {
     UserPhoto = 'user-photo',
     NewsImage = 'news-image',
     GalleryPhoto = 'gallery-photo',
+  }
+
+  export enum LinkResource {
+    FIREBASE = 'firebase',
+    EXTERNAL_LINK = 'external-link',
   }
 }

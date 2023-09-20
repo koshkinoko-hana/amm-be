@@ -1,4 +1,5 @@
 import { FindResponse } from '@admin/department/dto/find.response'
+import { EmployeePositionShort } from '@common/dto/employee-short'
 import { Option } from '@common/dto/option'
 import { InjectLogger, Logger } from '@logger'
 import {
@@ -58,6 +59,20 @@ export class DepartmentController {
     const res = await this.departmentService.findOptions()
     logger.trace({ res }, '<')
     return res
+  }
+
+  @Put(':id/employees')
+  public async updateDepartmentEmployees(
+    @Param('id') id: number,
+    @Body() req: EmployeePositionShort[],
+    @Res() res: Response,
+  ) {
+    const logger = this.logger.child('update')
+    logger.trace('>')
+    await this.departmentService.updateDepartmentEmployees(id, req)
+
+    logger.trace({ res }, '<')
+    res.status(HttpStatus.NO_CONTENT).send()
   }
 
   @Put(':id')

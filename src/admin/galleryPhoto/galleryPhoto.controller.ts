@@ -1,3 +1,5 @@
+import { CreateRequest } from '@admin/galleryPhoto/dto/create.request'
+import { Response } from 'express'
 import { FindResponse } from './dto/find.response'
 import { FindAllResponse } from './dto/find-all.response'
 import { UploadPhoto } from './dto/upload-photo'
@@ -10,9 +12,11 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Post,
   Query,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -57,7 +61,7 @@ export class GalleryPhotoController {
     return new PaginatedResponseWrapper<FindAllResponse.GalleryPhoto>(res, pageInfo)
   }
 
-  @Post()
+  @Post('file')
   @UseInterceptors(FileInterceptor('file'))
   public async uploadPhoto(
     @UploadedFile() file: Express.Multer.File,
@@ -69,10 +73,21 @@ export class GalleryPhotoController {
       file,
       Photo.PhotoType.GalleryPhoto,
       req.title,
+      req.albumId,
     )
 
     logger.trace({ res }, '<')
     return res
+  }
+
+  @Post()
+  public async createPhoto(@Body() req: CreateRequest.GalleryPhoto, @Res() res: Response) {
+    const logger = this.logger.child('uploadPhoto')
+    logger.trace('>')
+    await this.galleryPhotoService.create(req)
+
+    logger.trace('<')
+    res.status(HttpStatus.NO_CONTENT).send()
   }
 
   @Delete(':id')

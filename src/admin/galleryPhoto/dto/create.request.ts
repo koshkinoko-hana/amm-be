@@ -1,8 +1,12 @@
-import { IsString } from 'class-validator'
+import { IsOptional, IsString } from 'class-validator'
 
 export namespace CreateRequest {
   export class GalleryPhoto {
+    @IsOptional()
     @IsString()
-    title!: string
+    title?: string
+
+    @IsString()
+    link!: string
   }
 }

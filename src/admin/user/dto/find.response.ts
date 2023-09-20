@@ -1,6 +1,6 @@
 import { User as UserEntity } from '@entities'
 
-export namespace FindMeResponse {
+export namespace FindResponse {
   export class User {
     readonly id: number
     readonly login: string

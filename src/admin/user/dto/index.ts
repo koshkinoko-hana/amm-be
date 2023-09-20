@@ -1,2 +1,2 @@
-export { FindMeResponse } from './find-me.response'
+export { FindResponse } from './find.response'
 export { AuthorizationResponse } from './authorizationResponse'

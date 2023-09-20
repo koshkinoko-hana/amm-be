@@ -105,7 +105,7 @@ export class PositionService {
       Position,
       { name: req.name },
       conflictHandler(logger, {
-        message: () => `Position name ${req.name} is already in use.`,
+        message: () => `Название должности ${req.name} уже используется`,
       }),
     )
     const position = new Position(req)

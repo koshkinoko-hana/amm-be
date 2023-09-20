@@ -1,12 +1,14 @@
+import { EmployeePositionShort } from '@common/dto/employee-short'
 import { Option } from '@common/dto/option'
+import { EmployeeDepartmentPosition } from '@common/entities/employee-department-position.entity'
 import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
-import { Department, Employee } from '@entities'
+import { Department, Employee, Position } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import {
   mapEmployeeToEmployeeShort,
-  mapEmployeeDepartmentPositionToEmployeeShortWithPosition,
+  mapEmployeeDepartmentPositionToEmployeePositionShort,
 } from '@utils'
 import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
@@ -72,7 +74,7 @@ export class DepartmentService {
       head: mapEmployeeToEmployeeShort(department.head),
       employees: department.employeesWithPositions
         .getItems()
-        .map(mapEmployeeDepartmentPositionToEmployeeShortWithPosition),
+        .map(mapEmployeeDepartmentPositionToEmployeePositionShort),
     })
     logger.trace({ res }, '<')
     return res
@@ -80,7 +82,7 @@ export class DepartmentService {
 
   public async update(id: number, req: UpdateRequest.Department) {
     const logger = this.logger.child('update')
-    logger.trace('>')
+    logger.trace('>', { id, req })
     const department = await this.em.findOneOrFail(
       Department,
       {
@@ -90,9 +92,20 @@ export class DepartmentService {
         failHandler: notFoundHandler(logger),
       },
     )
+    await failIfExists(
+      this.em,
+      Department,
+      { name: req.name, $not: { id } },
+      conflictHandler(logger, {
+        message: () => `Название кафедры ${req.name} уже используется.`,
+      }),
+    )
     department.name = req.name
     department.description = req.description
     department.competencies = req.competencies
+    department.phones = req.phones
+    department.address = req.address
+    department.email = req.email
 
     const head = await this.em.findOneOrFail(
       Employee,
@@ -110,6 +123,70 @@ export class DepartmentService {
     return department
   }
 
+  public async updateDepartmentEmployees(id: number, req: EmployeePositionShort[]) {
+    const logger = this.logger.child('updateDepartmentEmployees')
+    logger.trace('>', { id, req })
+
+    const department = await this.em.findOneOrFail(
+      Department,
+      {
+        id,
+      },
+      {
+        failHandler: notFoundHandler(logger),
+        populate: ['employeesWithPositions'],
+      },
+    )
+
+    const edps = department.employeesWithPositions.getItems()
+
+    const currentEmployeePositionMap = new Map(
+      edps.map((edp) => [`${edp.employee.id}_${edp.position.id}`, edp]),
+    )
+    const updatedEmployeePositionSet = new Set(req.map((edp) => `${edp.id}_${edp.positionId}`))
+
+    const positionList = await this.em.find(Position, {})
+
+    for (const ep of updatedEmployeePositionSet) {
+      if (!currentEmployeePositionMap.has(ep)) {
+        const [employeeId, positionId] = ep.split('_')
+        const position = positionList.find((p) => p.id === Number(positionId))
+        if (!position) {
+          throw new NotFoundException(`Должность с ID ${positionId} не найдена`)
+        }
+
+        const employee = await this.em.findOneOrFail(
+          Employee,
+          { id: Number(employeeId) },
+          {
+            failHandler: notFoundHandler(logger),
+          },
+        )
+
+        if (!employee) {
+          throw new NotFoundException(`Сотрудник с ID ${employeeId} не найден`)
+        }
+
+        const edp = new EmployeeDepartmentPosition({
+          employee,
+          department,
+          position,
+        })
+        this.em.persist(edp)
+      } else {
+        currentEmployeePositionMap.delete(ep)
+      }
+    }
+
+    for (const ep of currentEmployeePositionMap.values()) {
+      this.em.remove(ep)
+    }
+
+    await this.em.flush()
+
+    logger.trace('<')
+  }
+
   public async create(req: CreateRequest.Department) {
     const logger = this.logger.child('create')
     logger.trace('>')
@@ -118,12 +195,12 @@ export class DepartmentService {
       Department,
       { name: req.name },
       conflictHandler(logger, {
-        message: () => `Department name ${req.name} is already in use.`,
+        message: () => `Название кафедры ${req.name} уже используется.`,
       }),
     )
     const head = await this.em.findOneOrFail(
       Employee,
-      { id: req.headId },
+      { id: req.head },
       {
         failHandler: notFoundHandler(logger),
       },

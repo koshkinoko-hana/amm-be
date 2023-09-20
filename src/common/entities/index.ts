@@ -1,3 +1,4 @@
+export { Album } from './album.entity'
 export { Auditory } from './auditory.entity'
 export { Company } from './company.entity'
 export { Employee } from './employee.entity'

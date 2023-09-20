@@ -1,13 +1,14 @@
 export namespace FindAllResponse {
   export class GalleryPhoto {
     id: number
-    title?: string
-    createdAt: Date
     path: string
+    albumId?: number
+    album?: string
+
     constructor(props: GalleryPhoto) {
       this.id = props.id
-      this.title = props.title
-      this.createdAt = props.createdAt
+      this.albumId = props.albumId
+      this.album = props.album
       this.path = props.path
     }
   }

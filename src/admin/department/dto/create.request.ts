@@ -10,9 +10,18 @@ export namespace CreateRequest {
     description?: string
 
     @IsNumber()
-    headId!: number
+    head!: number
 
     @IsArray()
     competencies!: string[]
+
+    @IsString()
+    address!: string
+
+    @IsArray()
+    phones!: string[]
+
+    @IsString()
+    email!: string
   }
 }

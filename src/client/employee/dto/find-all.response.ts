@@ -1,3 +1,5 @@
+import { DepartmentPositionShort } from '@common/dto/department-position-short'
+
 export namespace FindAllResponse {
   export class Employee {
     id: number
@@ -5,7 +7,7 @@ export namespace FindAllResponse {
     middleName?: string
     lastName: string
     photoPath?: string
-    departmentPosition
+    departmentPositions: DepartmentPositionShort[]
 
     constructor(props: Employee) {
       this.id = props.id
@@ -13,8 +15,7 @@ export namespace FindAllResponse {
       this.middleName = props.middleName
       this.lastName = props.lastName
       this.photoPath = props.photoPath
-      this.positions = props.positions
-      this.departments = props.departments
+      this.departmentPositions = props.departmentPositions
     }
   }
 

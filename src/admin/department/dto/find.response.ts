@@ -8,6 +8,9 @@ export namespace FindResponse {
     description?: string
     competencies: string[]
     employees: EmployeePositionShort[]
+    address: string
+    phones: string[]
+    email: string
 
     constructor(props: Department) {
       this.id = props.id
@@ -16,6 +19,9 @@ export namespace FindResponse {
       this.description = props.description
       this.competencies = props.competencies
       this.employees = props.employees
+      this.address = props.address
+      this.email = props.email
+      this.phones = props.phones
     }
   }
 }

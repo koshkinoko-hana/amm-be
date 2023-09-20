@@ -1,8 +1,10 @@
 import { DepartmentPositionShort } from '@common/dto/department-position-short'
 import { EmployeeShort, EmployeePositionShort } from '@common/dto/employee-short'
 import { Option } from '@common/dto/option'
-import { EmployeeDepartmentPosition } from '@common/entities/employee-position.entity'
+import { EmployeeDepartmentPosition } from '@common/entities/employee-department-position.entity'
+import { FirebaseStorageProvider } from '@common/file-helper/firebase-storage.provider'
 import { Employee } from '@entities'
+import { FindResponse } from '../../client/department/dto/find.response'
 
 export function mapEmployeeToEmployeeShort(e: Employee): EmployeeShort {
   return {
@@ -22,7 +24,7 @@ export function mapEmployeeDepartmentPositionToDepartmentPosition(
   }
 }
 
-export function mapEmployeePositionToEmployeeShortWithPosition(
+export function mapEmployeeDepartmentPositionToEmployeePositionShort(
   ep: EmployeeDepartmentPosition,
 ): EmployeePositionShort {
   return {
@@ -31,6 +33,26 @@ export function mapEmployeePositionToEmployeeShortWithPosition(
     positionId: ep.position.id,
     positionName: ep.position.name,
   }
+}
+
+export async function mapEmployeeDepartmentPositionToDepartmentEmployeeList(
+  list: EmployeeDepartmentPosition[],
+  firebaseStorageProvider: FirebaseStorageProvider,
+): Promise<FindResponse.DepartmentEmployee[]> {
+  const mappedByEmployeeId = new Map<number, FindResponse.DepartmentEmployee>()
+  for (const edp of list) {
+    if (!mappedByEmployeeId.has(edp.employee.id)) {
+      mappedByEmployeeId.set(edp.employee.id, {
+        ...edp.employee,
+        photoPath:
+          edp.employee.photo && (await firebaseStorageProvider.getFile(edp.employee.photo)),
+        positions: [edp.position.name],
+      })
+    } else {
+      mappedByEmployeeId.get(edp.employee.id)!.positions.push(edp.position.name)
+    }
+  }
+  return [...mappedByEmployeeId.values()]
 }
 
 export function mapEmployeeToOption(e: Employee): Option {

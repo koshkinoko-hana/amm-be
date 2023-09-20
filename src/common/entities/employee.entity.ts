@@ -1,4 +1,4 @@
-import { EmployeeDepartmentPosition } from '@common/entities/employee-position.entity'
+import { EmployeeDepartmentPosition } from './employee-department-position.entity'
 import { Photo } from './photo.entity'
 import { Collection, Entity, OneToMany, OneToOne, Property } from '@mikro-orm/core'
 import { Auditable } from './auditable.entity'
@@ -13,9 +13,6 @@ export class Employee extends Auditable {
 
   @Property()
   lastName: string
-
-  @Property()
-  photoId?: number
 
   @OneToOne({ nullable: true })
   photo?: Photo
@@ -38,6 +35,5 @@ export class Employee extends Auditable {
     this.photo = props.photo
     this.description = props.description
     this.worksSince = props.worksSince
-    this.photoId = props.photoId
   }
 }

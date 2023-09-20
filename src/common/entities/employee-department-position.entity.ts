@@ -2,16 +2,17 @@ import { Auditable } from './auditable.entity'
 import { Department } from './department.entity'
 import { Position } from './position.entity'
 import { Employee } from './employee.entity'
-import { ManyToOne } from '@mikro-orm/core'
+import { Entity, ManyToOne } from '@mikro-orm/core'
 
+@Entity()
 export class EmployeeDepartmentPosition extends Auditable {
-  @ManyToOne({ nullable: false })
+  @ManyToOne(() => Employee, { nullable: false })
   employee: Employee
 
-  @ManyToOne({ nullable: false })
+  @ManyToOne(() => Position, { nullable: false })
   position: Position
 
-  @ManyToOne({ nullable: true })
+  @ManyToOne(() => Department, { nullable: true })
   department?: Department
 
   constructor(props: Omit<EmployeeDepartmentPosition, keyof Auditable>) {

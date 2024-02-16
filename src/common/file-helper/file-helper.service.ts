@@ -32,13 +32,15 @@ export class FileHelperService {
 
     const path = await this.storageProvider.upload(file, folder, uuidName)
 
-    const album = await this.em.findOneOrFail(
-      Album,
-      { id: albumId },
-      {
-        failHandler: notFoundHandler(logger),
-      },
-    )
+    let album
+    if (albumId)
+      album = await this.em.findOneOrFail(
+        Album,
+        { id: albumId },
+        {
+          failHandler: notFoundHandler(logger),
+        },
+      )
     const photo = new Photo({
       title: title || '',
       path,

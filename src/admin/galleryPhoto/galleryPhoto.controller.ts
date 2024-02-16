@@ -1,5 +1,4 @@
 import { CreateRequest } from '@admin/galleryPhoto/dto/create.request'
-import { Response } from 'express'
 import { FindResponse } from './dto/find.response'
 import { FindAllResponse } from './dto/find-all.response'
 import { UploadPhoto } from './dto/upload-photo'
@@ -12,11 +11,9 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   Post,
   Query,
-  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -81,13 +78,14 @@ export class GalleryPhotoController {
   }
 
   @Post()
-  public async createPhoto(@Body() req: CreateRequest.GalleryPhoto, @Res() res: Response) {
-    const logger = this.logger.child('uploadPhoto')
+  public async createPhoto(@Body() req: CreateRequest.GalleryPhoto): Promise<number> {
+    const logger = this.logger.child('uploadPhoto', { req })
     logger.trace('>')
-    await this.galleryPhotoService.create(req)
+    const id = await this.galleryPhotoService.create(req)
+    logger.traceObject({ id })
 
     logger.trace('<')
-    res.status(HttpStatus.NO_CONTENT).send()
+    return id
   }
 
   @Delete(':id')

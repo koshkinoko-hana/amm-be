@@ -7,7 +7,7 @@ import { FindResponse } from './dto/find.response'
 import { UpdateRequest } from './dto/update.request'
 import { AlbumService } from './album.service'
 
-@Controller('/admin/position')
+@Controller('/admin/album')
 export class AlbumController {
   constructor(
     @InjectLogger(AlbumController)

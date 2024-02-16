@@ -105,6 +105,7 @@ export class GalleryPhotoService {
 
     await this.em.persistAndFlush(photo)
     logger.trace('<')
+    return photo.id
   }
 
   public async delete(id: number) {

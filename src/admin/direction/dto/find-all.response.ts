@@ -4,9 +4,6 @@ export namespace FindAllResponse {
     number: string
     type: string
     name: string
-    features: string[]
-    profiles: string[]
-    forms: string[]
     price: number
     exams: string[]
 
@@ -15,9 +12,6 @@ export namespace FindAllResponse {
       this.number = props.number
       this.type = props.type
       this.name = props.name
-      this.features = props.features
-      this.profiles = props.profiles
-      this.forms = props.forms
       this.price = props.price
       this.exams = props.exams
     }

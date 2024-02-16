@@ -2,9 +2,9 @@ import { ReqAuthInfo } from '@common/decorators/req-auth-info.decorator'
 import { InjectLogger, Logger } from '@logger'
 import { Controller, Get, UseGuards } from '@nestjs/common'
 import { UserService } from './user.service'
-import { AuthenticatedGuard } from '../auth/guards/authenticated.guard'
-import { FindMeResponse } from './dto/find-me.response'
-import { AuthInfo } from '../auth/interfaces'
+import { AuthenticatedGuard } from '@admin/auth/guards'
+import { FindResponse } from '@admin/user/dto'
+import { AuthInfo } from '@admin/auth/interfaces'
 
 @UseGuards(AuthenticatedGuard)
 @Controller('/admin/user')
@@ -18,7 +18,7 @@ export class UserController {
   }
 
   @Get('/me')
-  async getMe(@ReqAuthInfo() authInfo: AuthInfo): Promise<FindMeResponse.User> {
+  async getMe(@ReqAuthInfo() authInfo: AuthInfo): Promise<FindResponse.User> {
     const logger = this.logger.child('getMe')
     logger.trace('>')
 

@@ -40,7 +40,7 @@ export class GalleryPhotoService {
         id: photo.id,
         title: photo.title,
         createdAt: photo.createdAt,
-        path: await this.firebaseStorageProvider.getFile(photo.path),
+        path: await this.firebaseStorageProvider.getFile(photo),
       })),
     )
 

@@ -1,13 +1,16 @@
-import { notFoundHandler } from '@common/utils/fail-handler'
+import { CreateRequest } from '@admin/galleryPhoto/dto/create.request'
+import { PaginationQuery } from '@common/dto'
+import { PageInfo } from '@common/dto/page-info'
+import { FirebaseStorageProvider } from '@common/file-helper/firebase-storage.provider'
+import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
 import { Photo } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
-import { PageInfo } from '@common/dto/page-info'
-import { PaginationQuery } from '@common/dto'
-import { FirebaseStorageProvider } from '@common/file-helper/firebase-storage.provider'
+import LinkResource = Photo.LinkResource
+import PhotoType = Photo.PhotoType
 
 @Injectable()
 export class GalleryPhotoService {
@@ -22,7 +25,7 @@ export class GalleryPhotoService {
 
   public async findAll(
     pagination: PaginationQuery,
-  ): Promise<Promise<[FindAllResponse.GalleryPhoto[], PageInfo]>> {
+  ): Promise<[FindAllResponse.GalleryPhoto[], PageInfo]> {
     const logger = this.logger.child('findAll')
     logger.trace('>')
     const [galleryPhotos, total] = await this.em.findAndCount(
@@ -32,17 +35,18 @@ export class GalleryPhotoService {
       },
       {
         ...pagination,
+        populate: ['album'],
       },
     )
 
     logger.trace({ galleryPhotos })
 
-    const castedGalleryPhotos = await Promise.all(
+    const castedGalleryPhotos: FindAllResponse.GalleryPhoto[] = await Promise.all(
       galleryPhotos.map(async (photo) => ({
         id: photo.id,
-        title: photo.title,
-        createdAt: photo.createdAt,
-        path: await this.firebaseStorageProvider.getFile(photo.path),
+        path: await this.firebaseStorageProvider.getFile(photo),
+        album: photo.album?.name,
+        albumId: photo.album?.id,
       })),
     )
 
@@ -51,8 +55,8 @@ export class GalleryPhotoService {
     return [castedGalleryPhotos, { ...pagination, total }]
   }
 
-  public async find(id: number) {
-    const logger = this.logger.child('findAll')
+  public async find(id: number): Promise<FindResponse.GalleryPhoto> {
+    const logger = this.logger.child('find', { id })
     logger.trace('>')
     const galleryPhoto = await this.em.findOneOrFail(
       Photo,
@@ -61,16 +65,17 @@ export class GalleryPhotoService {
       },
       {
         failHandler: notFoundHandler(logger),
+        populate: ['album'],
       },
     )
 
     logger.traceObject({ galleryPhoto })
 
-    const castedGalleryPhoto = {
+    const castedGalleryPhoto = new FindResponse.GalleryPhoto({
       id: galleryPhoto.id,
-      title: galleryPhoto.title,
-      path: await this.firebaseStorageProvider.getFile(galleryPhoto.path),
-    }
+      albumId: galleryPhoto.album?.id,
+      path: await this.firebaseStorageProvider.getFile(galleryPhoto),
+    })
     const res = new FindResponse.GalleryPhoto({
       ...castedGalleryPhoto,
     })
@@ -78,24 +83,52 @@ export class GalleryPhotoService {
     return res
   }
 
+  public async create(req: CreateRequest.GalleryPhoto) {
+    const logger = this.logger.child('create', { req })
+    logger.trace('>')
+
+    await failIfExists(
+      this.em,
+      Photo,
+      { path: req.link, linkResource: LinkResource.EXTERNAL_LINK },
+      conflictHandler(logger, {
+        message: () => `Фото ${req.link} уже было загружено.`,
+      }),
+    )
+
+    const photo = new Photo({
+      ...req,
+      linkResource: LinkResource.EXTERNAL_LINK,
+      type: PhotoType.GalleryPhoto,
+      path: req.link,
+    })
+
+    await this.em.persistAndFlush(photo)
+    logger.trace('<')
+    return photo.id
+  }
+
   public async delete(id: number) {
     const logger = this.logger.child('delete', { id })
     logger.trace('>')
 
-    const galleryPhoto = await this.em.findOneOrFail(
+    const photo = await this.em.findOneOrFail(
       Photo,
+      { id },
       {
-        id,
-      },
-      {
-        failHandler: notFoundHandler(logger),
+        failHandler: notFoundHandler(logger, {
+          message: () => 'Фото не найдено!',
+          logLevel: 'warn',
+        }),
       },
     )
 
-    await this.em.removeAndFlush(galleryPhoto)
+    await this.firebaseStorageProvider.deleteFile(photo)
 
-    logger.traceObject({ galleryPhoto })
+    await this.em.removeAndFlush(photo)
 
-    return galleryPhoto.id
+    logger.traceObject({ photo })
+
+    return photo.id
   }
 }

@@ -1,4 +1,4 @@
-import { Option } from '@common/dto/option'
+import { DepartmentPositionShort } from '@common/dto/department-position-short'
 
 export namespace FindResponse {
   export class Employee {
@@ -7,8 +7,7 @@ export namespace FindResponse {
     lastName: string
     photoPath?: string
     description?: string
-    positions: Option[]
-    departments: Option[]
+    departmentPositions: DepartmentPositionShort[]
 
     constructor(props: Employee) {
       this.firstName = props.firstName
@@ -16,8 +15,7 @@ export namespace FindResponse {
       this.lastName = props.lastName
       this.photoPath = props.photoPath
       this.description = props.description
-      this.positions = props.positions
-      this.departments = props.departments
+      this.departmentPositions = props.departmentPositions
     }
   }
 }

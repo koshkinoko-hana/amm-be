@@ -37,7 +37,7 @@ export class NewsService {
 
     const res: FindAllResponse.News[] = []
     for (const n of news) {
-      const photoPath = n.photo && (await this.firebaseStorageProvider.getFile(n.photo.path))
+      const photoPath = n.photo && (await this.firebaseStorageProvider.getFile(n.photo))
       const item = new FindAllResponse.News({
         ...n,
         photoPath,
@@ -66,7 +66,7 @@ export class NewsService {
 
     logger.traceObject({ news })
 
-    const photoPath = news.photo && (await this.firebaseStorageProvider.getFile(news.photo.path))
+    const photoPath = news.photo && (await this.firebaseStorageProvider.getFile(news.photo))
     const res = new FindResponse.News({
       ...news,
       photoPath,

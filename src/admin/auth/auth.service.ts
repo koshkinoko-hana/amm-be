@@ -37,7 +37,7 @@ export class AuthService {
       { login },
       {
         failHandler: notFoundHandler(logger, {
-          message: () => 'Invalid credentials!',
+          message: () => 'Неверный логин или пароль',
           logLevel: 'warn',
         }),
       },
@@ -46,7 +46,7 @@ export class AuthService {
     logger.traceObject({ user })
 
     if (user.status === User.Status.DEACTIVATED) {
-      const err = new BadRequestException('Invalid credentials!')
+      const err = new BadRequestException('Неверный логин или пароль')
       logger.warn({ err, user }, '! user is deactivated')
       throw err
     }
@@ -56,7 +56,7 @@ export class AuthService {
     logger.traceObject({ credentialsMatched })
 
     if (!credentialsMatched) {
-      const err = new BadRequestException(`Invalid credentials!`)
+      const err = new BadRequestException(`Неверный логин или пароль`)
       logger.warn({ err, user }, '! invalid credentials')
       throw err
     }
@@ -86,7 +86,7 @@ export class AuthService {
       User,
       { login },
       badRequestHandler(logger, {
-        message: () => 'Invalid credentials!456',
+        message: () => 'Пользователь с данным логином уже существует',
         logLevel: 'warn',
       }),
     )
@@ -130,7 +130,7 @@ export class AuthService {
     const { sub: login, iss } = tokenPayload
 
     if (iss !== this.tokenIssuer) {
-      const err = new BadRequestException('Invalid credentials!678')
+      const err = new BadRequestException('Неверный логин или пароль')
       logger.error(err, '! invalid issuer')
       throw err
     }
@@ -140,7 +140,7 @@ export class AuthService {
       { login },
       {
         failHandler: badRequestHandler(logger, {
-          message: () => 'Invalid credentials!567',
+          message: () => 'Пользователь не авторизован',
           logLevel: 'warn',
         }),
       },

@@ -1,6 +1,6 @@
 import { CreateRequest } from '@admin/employee/dto/create.request'
-import { EmployeeResponse } from '@admin/employee/dto/employee.response'
 import { FindResponse } from '@admin/employee/dto/find.response'
+import { Option } from '@common/dto/option'
 import { UploadPhoto } from '@common/dto/upload-photo'
 import { UploadedFileResponse } from '@common/file-helper/dto/uploaded-file.response'
 import { FileHelperService } from '@common/file-helper/file-helper.service'
@@ -11,14 +11,17 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Post,
   Put,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { Response } from 'express'
 import { FindAllResponse } from './dto/find-all.response'
 import { UpdateRequest } from './dto/update.request'
 import { EmployeeService } from './employee.service'
@@ -34,6 +37,16 @@ export class EmployeeController {
     private readonly fileHelperService: FileHelperService,
   ) {
     this.logger.child('constructor').trace('<>')
+  }
+
+  @Get('/options')
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+    const res = await this.employeeService.findOptions()
+
+    logger.trace({ res }, '<')
+    return res
   }
 
   @Get(':id')
@@ -60,13 +73,14 @@ export class EmployeeController {
   public async update(
     @Param('id') id: number,
     @Body() req: UpdateRequest.Employee,
-  ): Promise<EmployeeResponse> {
+    @Res() res: Response,
+  ) {
     const logger = this.logger.child('update')
     logger.trace('>')
-    const res = await this.employeeService.update(id, req)
+    await this.employeeService.update(id, req)
 
     logger.trace({ res }, '<')
-    return res
+    res.status(HttpStatus.NO_CONTENT).send()
   }
 
   @Post('photo')
@@ -89,21 +103,21 @@ export class EmployeeController {
   }
 
   @Post()
-  public async create(@Body() req: CreateRequest.Employee): Promise<number> {
+  public async create(@Body() req: CreateRequest.Employee, @Res() res: Response) {
     const logger = this.logger.child('create')
     logger.trace('>')
-    const res = await this.employeeService.create(req)
+    await this.employeeService.create(req)
     logger.trace({ res }, '<')
-    return 201
+    res.status(HttpStatus.CREATED).send()
   }
 
   @Delete(':id')
-  public async delete(@Param('id') id: number): Promise<number> {
+  public async delete(@Param('id') id: number, @Res() res: Response) {
     const logger = this.logger.child('update')
     logger.trace('>')
-    const res = await this.employeeService.delete(id)
+    await this.employeeService.delete(id)
 
     logger.trace({ res }, '<')
-    return res
+    res.status(HttpStatus.NO_CONTENT).send()
   }
 }

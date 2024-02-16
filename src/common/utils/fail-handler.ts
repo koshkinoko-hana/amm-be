@@ -14,7 +14,8 @@ import {
   ForbiddenException,
   HttpException,
   NotFoundException,
-  Type, UnauthorizedException,
+  Type,
+  UnauthorizedException,
 } from '@nestjs/common'
 
 export type HandlerFn = (entityName: string, where: Dictionary | IPrimaryKey | any) => Error
@@ -52,7 +53,7 @@ export function badRequestHandler(
 ): HandlerFn {
   return failHandler(logger, {
     exception: BadRequestException,
-    message: (entityName) => `Wrong parameters for ${entityName}!`,
+    message: (entityName) => `Неверные параметры для ${entityName}!`,
     logLevel: 'info',
     ...options,
   })
@@ -64,7 +65,7 @@ export function unauthorizedHandler(
 ): HandlerFn {
   return failHandler(logger, {
     exception: UnauthorizedException,
-    message: () => `Not authenticated!`,
+    message: () => `Не авторизованный пользователь`,
     logLevel: 'info',
     ...options,
   })
@@ -73,7 +74,7 @@ export function unauthorizedHandler(
 export function notFoundHandler(logger: Logger, options?: Partial<FailHandlerOptions>): HandlerFn {
   return failHandler(logger, {
     exception: NotFoundException,
-    message: (entityName) => `${entityName} not found!`,
+    message: (entityName) => `${entityName} не найдена!`,
     logLevel: 'info',
     ...options,
   })
@@ -85,7 +86,7 @@ export function accessDeniedHandler(
 ): HandlerFn {
   return failHandler(logger, {
     exception: ForbiddenException,
-    message: (entityName) => `${entityName} access denied!`,
+    message: (entityName) => `Запрещён доступ к ${entityName} `,
     logLevel: 'warn',
     ...options,
   })
@@ -94,7 +95,7 @@ export function accessDeniedHandler(
 export function conflictHandler(logger: Logger, options?: Partial<FailHandlerOptions>): HandlerFn {
   return failHandler(logger, {
     exception: ConflictException,
-    message: (entityName) => `${entityName} already exists!`,
+    message: (entityName) => `${entityName} уже существует`,
     logLevel: 'info',
     logMsg: 'already exists',
     ...options,

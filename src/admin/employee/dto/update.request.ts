@@ -1,4 +1,4 @@
-import { Option } from '@common/dto/option'
+import { DepartmentPositionShort } from '@common/dto/department-position-short'
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export namespace UpdateRequest {
@@ -26,9 +26,6 @@ export namespace UpdateRequest {
     photoPath?: string
 
     @IsArray()
-    positions!: Option[]
-
-    @IsArray()
-    departments!: Option[]
+    departmentPositions!: DepartmentPositionShort[]
   }
 }

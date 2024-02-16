@@ -1,9 +1,11 @@
-import { EmployeeResponse } from '@admin/employee/dto/employee.response'
+import { Option } from '@common/dto/option'
+import { EmployeeDepartmentPosition } from '@common/entities/employee-department-position.entity'
 import { notFoundHandler } from '@common/utils/fail-handler'
-import { Department, Employee, Position } from '@entities'
+import { Department, Employee, Photo, Position } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { mapEmployeeDepartmentPositionToDepartmentPosition, mapEmployeeToOption } from '@utils'
 import { CreateRequest } from './dto/create.request'
 import { FindAllResponse } from './dto/find-all.response'
 import { FindResponse } from './dto/find.response'
@@ -28,7 +30,14 @@ export class EmployeeService {
     const employees = await this.em.find(
       Employee,
       {},
-      { populate: ['photo', 'positions', 'departments'] },
+      {
+        populate: [
+          'photo',
+          'employeeDepartmentPositions',
+          'employeeDepartmentPositions.position',
+          'employeeDepartmentPositions.department',
+        ],
+      },
     )
 
     logger.trace({ employees })
@@ -36,17 +45,32 @@ export class EmployeeService {
     const resolve: Promise<FindAllResponse.Employee>[] = employees.map(async (e: Employee) => {
       let photoPath = ''
       if (e.photo?.path) {
-        photoPath = await this.storageProvider.getFile(e.photo.path)
+        photoPath = await this.storageProvider.getFile(e.photo)
       }
       return new FindAllResponse.Employee({
         ...e,
-        positions: e.positions.toArray(),
-        departments: e.departments.toArray(),
+        departmentPositions: e.employeeDepartmentPositions
+          .getItems()
+          .filter((edp) => edp.department === null)
+          .map(mapEmployeeDepartmentPositionToDepartmentPosition),
         photoPath,
       })
     })
 
     const res = await Promise.all(resolve)
+    logger.trace({ res })
+    return res
+  }
+
+  public async findOptions(): Promise<Option[]> {
+    const logger = this.logger.child('findOptions')
+    logger.trace('>')
+
+    const employees = await this.em.find(Employee, {})
+
+    logger.trace({ employees })
+
+    const res = employees.map((e) => mapEmployeeToOption(e))
     logger.trace({ res })
     return res
   }
@@ -60,7 +84,12 @@ export class EmployeeService {
         id,
       },
       {
-        populate: ['positions', 'departments'],
+        populate: [
+          'employeeDepartmentPositions',
+          'employeeDepartmentPositions.position',
+          'employeeDepartmentPositions.department',
+          'photo',
+        ],
         failHandler: notFoundHandler(logger),
       },
     )
@@ -73,24 +102,20 @@ export class EmployeeService {
 
     let photoPath = ''
     if (employee.photo?.path) {
-      photoPath = await this.storageProvider.getFile(employee.photo.path)
+      photoPath = await this.storageProvider.getFile(employee.photo)
     }
 
     const res = new FindResponse.Employee({
       ...employee,
-      positions: employee.positions.toArray().map((position) => ({
-        value: position.id,
-        label: position.name,
-      })),
-      departments: employee.departments
-        .toArray()
-        .map((department) => ({ value: department.id, label: department.name })),
+      departmentPositions: employee.employeeDepartmentPositions
+        .getItems()
+        .map(mapEmployeeDepartmentPositionToDepartmentPosition),
       photoPath,
     })
     logger.trace({ res }, '<')
     return res
   }
-  // обновление полей
+
   public async update(id: number, req: UpdateRequest.Employee) {
     const logger = this.logger.child('update')
     logger.trace('>')
@@ -101,7 +126,12 @@ export class EmployeeService {
       },
       {
         failHandler: notFoundHandler(logger),
-        populate: ['photo', 'positions', 'departments'],
+        populate: [
+          'photo',
+          'employeeDepartmentPositions',
+          'employeeDepartmentPositions.position',
+          'employeeDepartmentPositions.department',
+        ],
       },
     )
 
@@ -109,74 +139,70 @@ export class EmployeeService {
     employee.middleName = req.middleName
     employee.lastName = req.lastName
     employee.description = req.description
-    if (req.photoId !== undefined) employee.photoId = req.photoId
-
-    const allPositions = await this.em.find(Position, {})
-    const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
-    const updatedPositions = new Set(req.positions.map((positionId) => positionId.value))
-
-    for (const positionId of updatedPositions) {
-      if (!currentPositions.has(positionId)) {
-        const position = allPositions.find((position) => position.id === positionId)
-
-        if (!position) {
-          throw new Error(`Position with ID ${positionId} not found`)
-        }
-
-        employee.positions.add(position)
-      }
+    if (req.photoId !== undefined) {
+      const photo = await this.em.findOneOrFail(
+        Photo,
+        {
+          id: req.photoId,
+        },
+        {
+          failHandler: notFoundHandler(logger),
+        },
+      )
+      employee.photo = photo
     }
-    for (const positionId of currentPositions) {
-      if (!updatedPositions.has(positionId)) {
-        const position = employee.positions
-          .getItems()
-          .find((position) => position.id === positionId)
 
-        if (position) {
-          employee.positions.remove(position)
-        }
-      }
-    }
-    const allDepartments = await this.em.find(Department, {})
-
-    const currentDepartments = new Set(
-      employee.departments.getItems().map((department) => department.id),
+    const currentDepartmentPositionsMap = new Map(
+      employee.employeeDepartmentPositions
+        .getItems()
+        .map((edp) => [`${edp.position.id}_${edp.department?.id ?? ''}`, edp]),
     )
-    const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId.value))
-    await this.em.persistAndFlush(employee)
-    for (const departmentId of updatedDepartments) {
-      if (!currentDepartments.has(departmentId)) {
-        const department = allDepartments.find((department) => {
-          return department.id === departmentId
+    const updatedDepartmentPositionsSet = new Set(
+      employee.employeeDepartmentPositions
+        .getItems()
+        .map((edp) => `${edp.position.id}_${edp.department?.id ?? ''}`),
+    )
+
+    const positionList = await this.em.find(Position, {})
+    const departmentList = await this.em.find(Department, {})
+
+    for (const dp of updatedDepartmentPositionsSet) {
+      if (!currentDepartmentPositionsMap.has(dp)) {
+        const [positionId, departmentId] = dp.split('_')
+        const position = positionList.find((p) => p.id === (positionId as unknown as number))
+        if (!position) {
+          throw new NotFoundException(`Кафедра с ID ${positionId} не найдена`)
+        }
+
+        let department: Department | undefined
+
+        if (departmentId !== '') {
+          department = departmentList.find((d) => d.id === (departmentId as unknown as number))
+          if (!department) {
+            throw new NotFoundException(`Кафедра с ID ${departmentId} не найдена`)
+          }
+        }
+
+        const edp = new EmployeeDepartmentPosition({
+          employee,
+          department,
+          position,
         })
-        if (!department) {
-          throw new Error(`Position with ID ${departmentId} not found`)
-        }
-
-        employee.departments.add(department)
+        this.em.persist(edp)
+      } else {
+        currentDepartmentPositionsMap.delete(dp)
       }
     }
-    for (const departmentId of currentDepartments) {
-      if (!updatedDepartments.has(departmentId)) {
-        const department = employee.departments
-          .getItems()
-          .find((department) => department.id === departmentId)
 
-        if (department) {
-          employee.departments.remove(department)
-        }
-      }
+    for (const dp of currentDepartmentPositionsMap.values()) {
+      this.em.remove(dp)
     }
+
     await this.em.persistAndFlush(employee)
 
     logger.traceObject({ employee })
 
-    return new EmployeeResponse({
-      ...employee,
-      positions: employee.positions.toArray(),
-      departments: employee.departments.toArray(),
-      photoId: employee.photo?.id,
-    })
+    return
   }
 
   public async create(req: CreateRequest.Employee) {
@@ -187,71 +213,50 @@ export class EmployeeService {
       middleName: req.middleName,
       lastName: req.lastName,
       description: req.description,
-      photoId: req.photoId,
     })
 
-    const allPositions = await this.em.find(Position, {})
-    const currentPositions = new Set(employee.positions.getItems().map((position) => position.id))
-    const updatedPositions = new Set(req.positions.map((positionId) => positionId))
-
-    for (const positionId of updatedPositions) {
-      if (!currentPositions.has(positionId)) {
-        const position = allPositions.find((position) => position.id === positionId)
-
-        if (!position) {
-          throw new Error(`Position with ID ${positionId} not found`)
-        }
-
-        employee.positions.add(position)
-      }
-    }
-
-    for (const positionId of currentPositions) {
-      if (!updatedPositions.has(positionId)) {
-        const position = employee.positions
-          .getItems()
-          .find((position) => position.id === positionId)
-
-        if (position) {
-          employee.positions.remove(position)
-        }
-      }
-    }
-
-    const allDepartments = await this.em.find(Department, {})
-    const currentDepartments = new Set(
-      employee.departments.getItems().map((department) => department.id),
-    )
-    const updatedDepartments = new Set(req.departments.map((departmentId) => departmentId))
-
-    for (const departmentId of updatedDepartments) {
-      if (!currentDepartments.has(departmentId)) {
-        const department = allDepartments.find((department) => department.id === departmentId)
-
-        if (!department) {
-          throw new Error(`Department with ID ${departmentId} not found`)
-        }
-
-        employee.departments.add(department)
-      }
-    }
-
-    for (const departmentId of currentDepartments) {
-      if (!updatedDepartments.has(departmentId)) {
-        const department = employee.departments
-          .getItems()
-          .find((department) => department.id === departmentId)
-
-        if (department) {
-          employee.departments.remove(department)
-        }
-      }
+    if (req.photoId) {
+      const photo = await this.em.findOneOrFail(
+        Photo,
+        {
+          id: req.photoId,
+        },
+        {
+          failHandler: notFoundHandler(logger),
+        },
+      )
+      employee.photo = photo
     }
 
     await this.em.persistAndFlush(employee)
 
+    const positionList = await this.em.find(Position, {})
+    const departmentList = await this.em.find(Department, {})
+
+    for (const dp of req.departmentPositions || []) {
+      const position = positionList.find((p) => p.id === dp.positionId)
+      if (!position) {
+        throw new NotFoundException(
+          `Должность id=${dp.positionId} название=${dp.positionName} не найдена`,
+        )
+      }
+      const department = departmentList.find((d) => d.id === dp.departmentId)
+      if (!department) {
+        throw new NotFoundException(
+          `Кафедра id=${dp.departmentId} название=${dp.departmentName} не найдена`,
+        )
+      }
+      const edp = new EmployeeDepartmentPosition({
+        employee,
+        position,
+        department: departmentList.find((d) => (d.id = dp.positionId)),
+      })
+
+      await this.em.persist(edp)
+    }
+    await this.em.flush()
+
     logger.traceObject({ employee })
-    return employee
   }
 
   public async delete(id: number) {
@@ -265,22 +270,28 @@ export class EmployeeService {
       },
       {
         failHandler: notFoundHandler(logger),
-        populate: ['positions', 'departments', 'photo'],
+        populate: ['employeeDepartmentPositions', 'photo'],
       },
     )
+
+    const department = await this.em.findOne(Department, { head: { id } })
+
+    if (department) {
+      throw new BadRequestException(
+        `Нельзя удалить сотрудника, т.к. он назначен заведующим кафедры ${department.name}`,
+      )
+    }
+
     if (employee.photo) {
-      if (employee.photo.path) await this.storageProvider.deleteFile(employee.photo.path)
+      if (employee.photo.path) await this.storageProvider.deleteFile(employee.photo)
       await this.em.removeAndFlush(employee.photo)
     }
 
-    employee.positions.removeAll()
-    employee.departments.removeAll()
+    employee.employeeDepartmentPositions.removeAll()
 
     await this.em.flush()
     await this.em.removeAndFlush(employee)
 
     logger.traceObject({ employee })
-
-    return employee.id
   }
 }

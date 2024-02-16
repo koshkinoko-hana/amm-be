@@ -4,8 +4,8 @@ import { JwtModule } from '@nestjs/jwt'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import {
+  AdminAuthGuard,
   AuthenticatedGuard,
-  AuthGuard,
   CompanyModeratorAuthGuard,
   ContentModeratorAuthGuard,
   NewsModeratorAuthGuard,
@@ -21,7 +21,7 @@ import { JwtStrategy } from './jwt.strategy'
     LoggerModule.forFeature([
       AuthController,
       AuthService,
-      AuthGuard,
+      AdminAuthGuard,
       AuthenticatedGuard,
       CompanyModeratorAuthGuard,
       ContentModeratorAuthGuard,
@@ -39,15 +39,26 @@ import { JwtStrategy } from './jwt.strategy'
     }),
   ],
   exports: [
-    LoggerModule.forFeature([AuthGuard]),
-    LoggerModule.forFeature([AuthenticatedGuard]),
-    LoggerModule.forFeature([CompanyModeratorAuthGuard]),
-    LoggerModule.forFeature([ContentModeratorAuthGuard]),
-    LoggerModule.forFeature([NewsModeratorAuthGuard]),
-    LoggerModule.forFeature([ScheduleModeratorAuthGuard]),
-    LoggerModule.forFeature([StructureDataAuthGuard]),
+    LoggerModule.forFeature([
+      AuthenticatedGuard,
+      AdminAuthGuard,
+      CompanyModeratorAuthGuard,
+      NewsModeratorAuthGuard,
+      ScheduleModeratorAuthGuard,
+      StructureDataAuthGuard,
+      AuthService,
+    ]),
     AuthService,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    AuthenticatedGuard,
+    AdminAuthGuard,
+    CompanyModeratorAuthGuard,
+    NewsModeratorAuthGuard,
+    ScheduleModeratorAuthGuard,
+    StructureDataAuthGuard,
+  ],
 })
 export class AuthModule {}

@@ -1,4 +1,5 @@
 import { conflictHandler, failIfExists, notFoundHandler } from '@common/utils/fail-handler'
+import { Department } from '@entities'
 import { InjectLogger, Logger } from '@logger'
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
@@ -42,6 +43,14 @@ export class DirectionService {
         failHandler: notFoundHandler(logger),
       },
     )
+    await failIfExists(
+      this.em,
+      Department,
+      { name: req.name, $not: { id } },
+      conflictHandler(logger, {
+        message: () => `Название направления ${req.name} уже используется.`,
+      }),
+    )
 
     direction.type = req.type
     direction.name = req.name
@@ -66,7 +75,7 @@ export class DirectionService {
       Direction,
       { name: req.name },
       conflictHandler(logger, {
-        message: () => `Direction name ${req.name} is already in use.`,
+        message: () => `Название направления ${req.name} уже используется.`,
       }),
     )
     const direction = new Direction(req)

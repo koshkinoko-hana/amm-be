@@ -1,4 +1,4 @@
-import {IsArray, IsOptional, IsString} from 'class-validator'
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export namespace CreateRequest {
   export class Department {
@@ -9,7 +9,19 @@ export namespace CreateRequest {
     @IsString()
     description?: string
 
+    @IsNumber()
+    head!: number
+
     @IsArray()
     competencies!: string[]
+
+    @IsString()
+    address!: string
+
+    @IsArray()
+    phones!: string[]
+
+    @IsString()
+    email!: string
   }
 }
